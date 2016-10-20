@@ -1,0 +1,51 @@
+name:                assembler
+version:             0.1.0.0
+build-type:          Simple
+extra-source-files:  src/Parser.y
+                     src/Lexer.x
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall
+  exposed-modules:     Types
+                     , Lexer
+                     , Parser
+                     , Inst
+                     , WriteTxt
+                     , WriteBin
+  build-tools:         happy, alex
+  build-depends:       base >= 4.7 && < 5
+                     , mtl
+                     , lens
+                     , array
+                     , containers
+                     , transformers
+  default-language:    Haskell2010
+
+executable assembler
+  main-is:             Main.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base
+                     , mtl
+                     , binary
+                     , filepath
+                     , assembler
+                     , bytestring
+                     , containers
+                     , optparse-applicative
+  default-language:    Haskell2010
+
+test-suite assembler-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base
+                     , assembler
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/2106-cpuex-C/assembler
+

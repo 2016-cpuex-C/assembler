@@ -1,0 +1,4 @@
+#! /usr/bin/env bash
+# 手元でビルドしたい場合, https://github.com/commercialhaskell/stack をインストールして
+# このスクリプトを走らせてください. 初回は結構時間かかると思います.
+stack --local-bin-path ./ install
