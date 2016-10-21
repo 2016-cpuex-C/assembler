@@ -12,8 +12,6 @@ library
                      , Lexer
                      , Parser
                      , Inst
-                     , WriteTxt
-                     , WriteBin
   build-tools:         happy, alex
   build-depends:       base >= 4.7 && < 5
                      , mtl
