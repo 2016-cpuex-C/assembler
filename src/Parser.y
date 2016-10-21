@@ -182,6 +182,7 @@ Imm       :: { Imm    } : int       { Imm $1       }
 {
 
 data ParseResult = ParseResult [Word32] [Inst] (Map LabelF Word32) (Map LabelI Word32)
+    deriving Show
 
 parse :: [Token] -> ParseResult
 parse tks =
