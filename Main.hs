@@ -16,16 +16,7 @@ import Options.Applicative
 import System.FilePath
 
 main :: IO ()
-main = do
-  let inputFile = "test/ack.s"
-      outputBin = inputFile -<.> "bin"
-      outputTxt = outputBin <.> "txt"
-  parseResult <- parse . lex <$> readFile inputFile
-  writeBin outputBin parseResult
-  writeTxt outputTxt parseResult
-
-main_ :: IO ()
-main_ = execParser (info (helper <*> parseOpt) fullDesc) >>= \opts -> do
+main = execParser (info (helper <*> parseOpt) fullDesc) >>= \opts -> do
   let inputFile = infile opts
       outputBin = case outfile opts of
                     Nothing -> inputFile -<.> "bin"
