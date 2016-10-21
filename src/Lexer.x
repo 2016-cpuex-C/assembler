@@ -9,6 +9,7 @@ module Lexer where
 --import Control.Lens
 --import Control.Monad.State.Class
 import Data.Word (Word32)
+import Data.Int   (Int16)
 }
 
 %wrapper "monadUserState"
@@ -32,6 +33,7 @@ tokens :-
   @reg      { mktk TokenReg id        }
   @int      { mktk TokenInt read      }
   @hex      { mktk TokenHex read      }
+  \-        { tk TokenNeg             }
   \(        { tk TokenLParen          }
   \)        { tk TokenRParen          }
   \:        { tk TokenColon           }
@@ -40,6 +42,8 @@ tokens :-
   \.data    { tk TokenData            }
   \.text    { tk TokenText            }
   -- 命令   {{{
+  mov       { tk MOV                  }
+  neg       { tk NEG                  }
   move      { tk MOV                  }
   add       { tk ADD                  }
   addi      { tk ADDI                 }
@@ -50,6 +54,7 @@ tokens :-
   div       { tk DIV                  }
   divi      { tk DIVI                 }
   mov\.s    { tk MOVS                 }
+  neg\.s    { tk NEGS                 }
   add\.s    { tk ADDS                 }
   sub\.s    { tk SUBS                 }
   mul\.s    { tk MULS                 }
@@ -95,7 +100,7 @@ tokens :-
 
 {
 
-data Token = TokenInt Word32 -- {{{
+data Token = TokenInt Int16 -- {{{
            | TokenHex Word32
            | TokenLabelDef String
            | TokenLabel String
@@ -110,6 +115,7 @@ data Token = TokenInt Word32 -- {{{
            | TokenNL
            | TokenData
            | TokenText
+           | TokenNeg
            | MOV
            | ADD
            | ADDI
@@ -158,6 +164,8 @@ data Token = TokenInt Word32 -- {{{
            | FTOI
            | ITOF
            | EXIT
+           | NEG
+           | NEGS
            deriving (Eq,Show) -- }}}
 
 lex :: String -> [Token]

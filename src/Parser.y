@@ -25,11 +25,13 @@ import qualified Data.Map as M
      ','    { TokenComma       }
      '('    { TokenLParen      }
      ')'    { TokenRParen      }
+     '-'    { TokenNeg         }
      eof    { TokenEOF         }
      data   { TokenData        }
      text   { TokenText        }
      word   { TokenWord        }
      mov    { MOV              }
+     neg    { NEG              }
      add    { ADD              }
      addi   { ADDI             }
      sub    { SUB              }
@@ -39,6 +41,7 @@ import qualified Data.Map as M
      div    { DIV              }
      divi   { DIVI             }
      movs   { MOVS             }
+     negs   { NEGS             }
      adds   { ADDS             }
      subs   { SUBS             }
      muls   { MULS             }
@@ -101,10 +104,11 @@ Block :: { [Inst] }
 
 Insts :: { [Inst] }
     : Inst Insts { $1:$2 }
-    | Inst       { [$1]  }
+    |            { []  }
 
 Inst :: { Inst }
     : mov    Reg    Reg           { Move   $2 $3    }
+    | neg    Reg    Reg           { Neg    $2 $3    }
     | add    Reg    Reg    Reg    { Add    $2 $3 $4 }
     | addi   Reg    Reg    Imm    { Addi   $2 $3 $4 }
     | sub    Reg    Reg    Reg    { Sub    $2 $3 $4 }
@@ -114,6 +118,7 @@ Inst :: { Inst }
     | div    Reg    Reg    Reg    { Div    $2 $3 $4 }
     | divi   Reg    Reg    Imm    { Divi   $2 $3 $4 }
     | movs   FReg   FReg          { Movs   $2 $3    }
+    | negs   FReg   FReg          { Negs   $2 $3    }
     | adds   FReg   FReg   FReg   { Adds   $2 $3 $4 }
     | subs   FReg   FReg   FReg   { Subs   $2 $3 $4 }
     | muls   FReg   FReg   FReg   { Muls   $2 $3 $4 }
@@ -152,20 +157,27 @@ Inst :: { Inst }
     | readi  Reg                  { ReadI  $2       }
     | readf  FReg                 { ReadF  $2       }
     | exit                        { Exit            }
-    -- あれ
-    | lwr Reg  Imm '(' Reg ')' { Lwr    $2 $5 $3 }
-    | lsr FReg Imm '(' Reg ')' { Lsr    $2 $5 $3 }
-    | sw  Reg  Imm '(' Reg ')' { Sw     $2 $5 $3 }
-    | ss  FReg Imm '(' Reg ')' { Ss     $2 $5 $3 }
+    -- これはcompilerでもやるべき
+    | addi   Reg Reg '-' Imm { Subi $2 $3 $5 }
+    | subi   Reg Reg '-' Imm { Addi $2 $3 $5 }
+    | lwr Reg  Imm '(' Reg ')' { Lwr    $2 $5 $3      }
+    | lsr FReg Imm '(' Reg ')' { Lsr    $2 $5 $3      }
+    | sw  Reg  Imm '(' Reg ')' { Sw     $2 $5 $3      }
+    | ss  FReg Imm '(' Reg ')' { Ss     $2 $5 $3      }
+    | lwr Reg      '(' Reg ')' { Lwr    $2 $4 (Imm 0) }
+    | lsr FReg     '(' Reg ')' { Lsr    $2 $4 (Imm 0) }
+    | sw  Reg      '(' Reg ')' { Sw     $2 $4 (Imm 0) }
+    | ss  FReg     '(' Reg ')' { Ss     $2 $4 (Imm 0) }
 
 
-LabelFDef :: { LabelF } : ldef { LabelF $1    }
-LabelIDef :: { LabelI } : ldef { LabelI $1    }
-LabelF    :: { LabelF } : l    { LabelF $1    }
-LabelI    :: { LabelI } : l    { LabelI $1    }
-Reg       :: { Reg    } : reg  { strToReg $1  }
-FReg      :: { FReg   } : freg { strToFReg $1 }
-Imm       :: { Imm    } : int  { Imm $1       }
+LabelFDef :: { LabelF } : ldef      { LabelF $1    }
+LabelIDef :: { LabelI } : ldef      { LabelI $1    }
+LabelF    :: { LabelF } : l         { LabelF $1    }
+LabelI    :: { LabelI } : l         { LabelI $1    }
+Reg       :: { Reg    } : reg       { strToReg $1  }
+FReg      :: { FReg   } : freg      { strToFReg $1 }
+Imm       :: { Imm    } : int       { Imm $1       }
+                        | '-' int   { Imm (-$2)    }
 
 {
 
@@ -199,7 +211,7 @@ addLabelI :: LabelI -> State S ()
 addLabelI li = modifying instMap . M.insert li =<< use instCnt
 
 parseError :: [Token] -> State S a
-parseError tks = error $ "Parse Error: remaining tokens are\n" ++ show tks
+parseError tks = error $ "Parse Error: remaining tokens are\n" ++ show (take 10 tks) ++ "..."
 
 }
 

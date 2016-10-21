@@ -10,23 +10,6 @@ import qualified Data.Map as M
 decodeInst :: Map LabelI Word32 -> Map LabelF Word32 -> Inst -> Word32
 decodeInst dici dicf = bitsToWord . instToBits dici dicf
 
--- 前を0埋め
-paddingF :: Int -> Bits -> Bits
-paddingF n s | length s > n = error $ "paddingF " ++ show n ++ " " ++ s
-             | otherwise = replicate (n - length s) '0' ++ s
--- 後を0埋め
-paddingB :: Int -> Bits -> Bits
-paddingB n s | length s > n = error $ "padding " ++ show n ++ " " ++ s
-             | otherwise = s ++ replicate (n - length s) '0'
-
-opcodeBits :: Inst -> Bits
-opcodeBits = paddingF 6 . wordToBits . opcode
-regToBits  :: Reg -> Bits
-regToBits (Reg i)   = paddingF 5 $ wordToBits i
-fregToBits :: FReg -> Bits
-fregToBits (FReg i) = paddingF 5 $ wordToBits i
-immToBits  :: Imm -> Bits
-immToBits (Imm i)   = paddingF 16 $ wordToBits i
 labeliToBits :: Map LabelI Word32 -> LabelI -> Bits
 labeliToBits dici li = paddingF 16 $ wordToBits n
   where n = M.findWithDefault (error $ show li ++ " not found") li dici
@@ -40,6 +23,7 @@ instToBits dici dicf e =
        labelfToBits' = labelfToBits dicf
   in paddingB 32 . concat . (opcodeBits e:) $ case e of
     Move   r1 r2    -> [regToBits  r1, regToBits  r2]
+    Neg    r1 r2    -> [regToBits  r1, regToBits  r2]
     Add    r1 r2 r3 -> [regToBits  r1, regToBits  r2, regToBits r3]
     Sub    r1 r2 r3 -> [regToBits  r1, regToBits  r2, regToBits r3]
     Mult   r1 r2 r3 -> [regToBits  r1, regToBits  r2, regToBits r3]
@@ -49,6 +33,7 @@ instToBits dici dicf e =
     Multi  r1 r2 i  -> [regToBits  r1, regToBits  r2, immToBits i]
     Divi   r1 r2 i  -> [regToBits  r1, regToBits  r2, immToBits i]
     Movs   f1 f2    -> [fregToBits f1, fregToBits f2]
+    Negs   f1 f2    -> [fregToBits f1, fregToBits f2]
     Adds   f1 f2 f3 -> [fregToBits f1, fregToBits f2, fregToBits f3]
     Subs   f1 f2 f3 -> [fregToBits f1, fregToBits f2, fregToBits f3]
     Muls   f1 f2 f3 -> [fregToBits f1, fregToBits f2, fregToBits f3]

@@ -5,17 +5,16 @@ module Types where
 import           Data.Word (Word32)
 import qualified Data.Map as M
 import           Control.Exception.Base (assert)
-import           Data.Maybe (fromJust)
-import           Control.Lens
-import           Numeric.Lens
 import           Numeric    (readInt)
 import           Data.Char  (digitToInt)
+import           Data.Int   (Int16)
+import           Data.Bits (testBit)
 
 type Bits = String
 
 newtype Reg    = Reg    Word32 deriving (Eq,Ord,Show)
 newtype FReg   = FReg   Word32 deriving (Eq,Ord,Show)
-newtype Imm    = Imm    Word32 deriving (Eq,Ord,Show)
+newtype Imm    = Imm    Int16  deriving (Eq,Ord,Show) -- Int16
 newtype LabelF = LabelF String deriving (Eq,Ord,Show)
 newtype LabelI = LabelI String deriving (Eq,Ord,Show)
 
@@ -67,6 +66,8 @@ data Inst = Move   Reg    Reg -- {{{
           | ReadI  Reg
           | ReadF  FReg
           | Exit
+          | Neg    Reg    Reg
+          | Negs   FReg   FReg
           deriving (Eq, Ord, Show)-- }}}
 
 ------------
@@ -122,23 +123,51 @@ opcode = \case -- {{{
   Sqrt  {} -> 45
   Ftoi  {} -> 46
   Itof  {} -> 47
-  Exit  {} -> 48-- }}}
+  Exit  {} -> 48
+  Neg   {} -> 49
+  Negs  {} -> 50
+  -- }}}
 
 ----------------
 -- conversion --
 ----------------
 
+-- # basic type # --
+
 -- errorCheckしてないので注意 headで死にうる
 bitsToWord :: Bits -> Word32
 bitsToWord = fst . head . readInt 2 (`elem` "01") digitToInt
+
 wordToBits :: Word32 -> Bits
-wordToBits = review binary
+wordToBits n = reverse [ if testBit n i then '1' else '0' | i <- [0..31]]
+
+int16ToBits :: Int16 -> Bits
+int16ToBits n = reverse [ if testBit n i then '1' else '0' | i <- [0..15]]
+
+-- # data type -> Bits # --
+
+immToBits :: Imm -> Bits
+immToBits (Imm n) = int16ToBits n
+
+opcodeBits :: Inst -> Bits
+opcodeBits = paddingF 6 . wordToBits . opcode
+
+regToBits  :: Reg -> Bits
+regToBits (Reg i)   = paddingF 5 $ wordToBits i
+
+fregToBits :: FReg -> Bits
+fregToBits (FReg i) = paddingF 5 $ wordToBits i
+
+
+-- # register # --
 
 strToFReg :: String -> FReg
 strToFReg s = assert (take 2 s == "$f") $ FReg (read $ drop 2 s)
 
 strToReg :: String -> Reg
-strToReg s = assert (M.member s regs) $ Reg $ fromJust $ M.lookup s regs
+strToReg s = case M.lookup s regs of
+               Nothing -> error $ "unknown register " ++ s
+               Just i  -> Reg i
   where regs = M.fromList
             [ ("$zero",0)
             , ("$at",  1)
@@ -173,4 +202,16 @@ strToReg s = assert (M.member s regs) $ Reg $ fromJust $ M.lookup s regs
             , ("$fp", 30)
             , ("$ra", 31)
             ]
+
+----------
+-- Util --
+----------
+-- 前を0埋め
+paddingF :: Int -> Bits -> Bits
+paddingF n s | length s > n = error $ "paddingF " ++ show n ++ " " ++ s
+             | otherwise = replicate (n - length s) '0' ++ s
+-- 後を0埋め
+paddingB :: Int -> Bits -> Bits
+paddingB n s | length s > n = error $ "padding " ++ show n ++ " " ++ s
+             | otherwise = s ++ replicate (n - length s) '0'
 

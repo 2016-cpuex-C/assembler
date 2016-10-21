@@ -1,54 +1,56 @@
-000001   move      r r
-000010   add       r r r
-000011   addi      r r i
-000100   sub       r r r
-000101   subi      r r i
-000110 - mult      r r r
-000111 - multi     r r i
-001000 - div       r r r
-001001 - divi      r r i
-001010   mov.s     f f
-001011   add.s     f f f
-001100   sub.s     f f f
-001101   mul.s     f f f
-001110   div.s     f f f
-001111   srl       r r i
-010000   sll       r r i
-010001   li        r i
-010010   la        r li
-010011   lwl       r lf
-010100   lwr       r r i #
-010101   l.sl      f lf
-010110   l.sr      f r i #
-010111   sw        r r i #
-011000   s.s       f r i #
-011001   beq       r r li
-011010   bne       r r li
-011011   blt       r r li
-011100   bgt       r r li
-011101   c.eq.s    f f li
-011110   c.le.s    f f li
-011111   c.lt.s    f f li
-100000   j         li
-100001   jr        r
-100010   jal       li
-100011   jalr      r
-100100   print_i   r
-100101 - print_f   f
-100110   print_c   r
-100111   read_i    r
-101000   read_f    f
-101001   sin       f f
-101010   cos       f f
-101011   atan      f f
-101100 - floor     f f
-101101 - sqrt      f f
-101110 - ftoi      r f
-101111 - itof      f r
-110000   exit
+000001    move      r r   # moveではなくmov?
+000010    add       r r r
+000011    addi      r r i
+000100    sub       r r r
+000101    subi      r r i
+000110  - mult      r r r
+000111  - multi     r r i
+001000  - div       r r r
+001001  - divi      r r i
+001010    mov.s     f f
+001011    add.s     f f f
+001100    sub.s     f f f
+001101    mul.s     f f f
+001110    div.s     f f f
+001111    srl       r r i
+010000    sll       r r i
+010001    li        r i
+010010    la        r li
+010011    lwl       r lf  # <- こんなのない
+010100    lwr       r r i
+010101    l.sl      f lf
+010110    l.sr      f r i
+010111    sw        r r i
+011000    s.s       f r i
+011001    beq       r r li
+011010    bne       r r li
+011011    blt       r r li
+011100    bgt       r r li
+011101    c.eq.s    f f li
+011110    c.le.s    f f li
+011111    c.lt.s    f f li
+100000    j         li
+100001    jr        r
+100010    jal       li
+100011    jalr      r
+100100    print_i   r
+100101  - print_f   f
+100110    print_c   r
+100111    read_i    r
+101000    read_f    f
+101001    sin       f f
+101010    cos       f f
+101011    atan      f f
+101100  - floor     f f
+101101  - sqrt      f f
+101110  - ftoi      r f
+101111  - itof      f r
+110000    exit
+110001    neg       r r
+110010    neg.s     f f
 
-00000 $zero (使ってない)
-00001 $at   (使ってない)
+00000 $zero (今は使ってない)
+00001 $at   (今は使ってない)
 00010 $v0
 00011 $v1
 00100 $a0
