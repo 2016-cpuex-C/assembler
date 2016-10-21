@@ -28,6 +28,7 @@ executable assembler
   build-depends:       base
                      , mtl
                      , binary
+                     , parsec
                      , filepath
                      , assembler
                      , bytestring

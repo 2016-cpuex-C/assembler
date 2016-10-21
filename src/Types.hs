@@ -139,7 +139,7 @@ bitsToWord :: Bits -> Word32
 bitsToWord = fst . head . readInt 2 (`elem` "01") digitToInt
 
 wordToBits :: Word32 -> Bits
-wordToBits n = reverse [ if testBit n i then '1' else '0' | i <- [0..31]]
+wordToBits n = dropWhile (=='0') $ reverse [ if testBit n i then '1' else '0' | i <- [0..31]]
 
 int16ToBits :: Int16 -> Bits
 int16ToBits n = reverse [ if testBit n i then '1' else '0' | i <- [0..15]]

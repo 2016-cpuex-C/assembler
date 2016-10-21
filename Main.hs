@@ -2,8 +2,7 @@
 module Main where
 
 import Types
-import Lexer
-import Parser
+import Parser hiding (Parser, (<.>))
 import Inst
 
 import Prelude              hiding (lex)
@@ -15,7 +14,14 @@ import Text.Printf          (printf)
 import Control.Monad        (when)
 import Options.Applicative
 import System.FilePath
+import qualified Text.Parsec as TP
+import qualified Text.Parsec.Token as P
+import           Text.Parsec.Language   (haskell)
 
+--main :: IO ()
+--main = do
+--  let p = TP.try (symbol "jal"    ) >> Jal    <$> labelI
+--  print $ TP.runParser (many inst) initS "" "jal\tmakehoge"
 main :: IO ()
 main = execParser (info (helper <*> parseOpt) fullDesc) >>= \opts -> do
   let inputFile = infile opts
@@ -23,7 +29,8 @@ main = execParser (info (helper <*> parseOpt) fullDesc) >>= \opts -> do
                     Nothing -> inputFile -<.> "bin"
                     Just o  -> o
       outputTxt = outputBin <.> "txt"
-  parseResult <- parse . lex <$> readFile inputFile
+  parseResult <- parseAsm inputFile <$> readFile inputFile
+  --print parseResult
   writeBin outputBin parseResult
   when (binTxt opts) $ writeTxt outputTxt parseResult
 
