@@ -12,7 +12,7 @@ import Data.Binary.Put      (putWord32be, runPut)
 import Data.ByteString.Lazy (hPut)
 import System.IO            (withFile, hPutStrLn, Handle, IOMode(..))
 import Text.Printf          (printf)
-import Control.Monad        (when)
+import Control.Monad        (unless)
 import Options.Applicative
 import System.FilePath
 
@@ -24,13 +24,13 @@ main = execParser (info (helper <*> parseOpt) fullDesc) >>= \opts -> do
                     Just o  -> o
       outputTxt = outputBin <.> "txt"
   parseResult <- parse . lex <$> readFile inputFile
+  --print parseResult
   writeBin outputBin parseResult
-  when (binTxt opts) $ writeTxt outputTxt parseResult
+  unless (noTxt opts) $ writeTxt outputTxt parseResult
 
 writeTxt :: FilePath -> ParseResult -> IO ()
 writeTxt = write $ \h x -> hPutStrLn h (printf "0x%08lx" x)
 
----- 見たまんま変換するのでbig endian (compilerがleにすでに変換している)
 writeBin :: FilePath -> ParseResult -> IO ()
 writeBin = write $ \h x -> hPut h (runPut $ putWord32be x)
 
@@ -44,7 +44,7 @@ write w out (ParseResult floats insts dicf dici) =
 
 data CmdOpt = CmdOpt
               { outfile :: Maybe String
-              , binTxt  :: Bool
+              , noTxt   :: Bool
               , infile  :: String
               }
 
@@ -57,8 +57,8 @@ parseOpt = pure CmdOpt
     <=> value Nothing
     <=> showDefaultWith (const "SRC:.s=.bin")
   <*> switch
-    $$  short 't'
-    <=> help "write machine code in `outfile.txt` in hex digits"
+    $$  long "no-txt"
+    <=> help "do not write machine code in $(outfile).txt` in hex digits"
     <=> showDefault
   <*> (argument str (metavar "SRC"))
   where
