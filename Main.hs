@@ -31,7 +31,7 @@ main = execParser (info (helper <*> parseOpt) fullDesc) >>= \opts -> do
   unless (noTxt opts) $ writeTxt outputTxt parseResult
 
 writeTxt :: FilePath -> ParseResult -> IO ()
-writeTxt = write $ \h x -> hPutStrLn h (printf "0x%08lx" x)
+writeTxt = write $ \h x -> hPutStrLn h (wordToBits32 x)
 
 writeBin :: FilePath -> ParseResult -> IO ()
 writeBin = write $ \h x -> hPut h (runPut $ putWord32be x)
@@ -54,13 +54,13 @@ parseOpt :: Parser CmdOpt
 parseOpt = pure CmdOpt
   <*> option (Just <$> str)
     $$  short 'o'
-    <=> metavar "outfile"
+    <=> metavar "OUTFILE"
     <=> help "outut file"
     <=> value Nothing
     <=> showDefaultWith (const "SRC:.s=.bin")
   <*> switch
     $$  long "no-txt"
-    <=> help "do not write machine code in $(outfile).txt` in hex digits"
+    <=> help "do not write machine code in OUTFILE.txt in 01s"
     <=> showDefault
   <*> (argument str (metavar "SRC"))
   where

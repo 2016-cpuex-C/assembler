@@ -139,7 +139,9 @@ bitsToWord :: Bits -> Word32
 bitsToWord = fst . head . readInt 2 (`elem` "01") digitToInt
 
 wordToBits :: Word32 -> Bits
-wordToBits n = dropWhile (=='0') $ reverse [ if testBit n i then '1' else '0' | i <- [0..31]]
+wordToBits = dropWhile (=='0') . wordToBits32
+wordToBits32 :: Word32 -> Bits
+wordToBits32 n = reverse [ if testBit n i then '1' else '0' | i <- [0..31]]
 
 int16ToBits :: Int16 -> Bits
 int16ToBits n = reverse [ if testBit n i then '1' else '0' | i <- [0..15]]
@@ -168,7 +170,7 @@ strToReg :: String -> Reg
 strToReg s = case M.lookup s regs of
                Nothing -> error $ "unknown register " ++ s
                Just i  -> Reg i
-  where regs = M.fromList
+  where regs = M.fromList --{{{
             [ ("$zero",0)
             , ("$at",  1)
             , ("$v0",  2)
@@ -201,7 +203,7 @@ strToReg s = case M.lookup s regs of
             , ("$sp", 29)
             , ("$fp", 30)
             , ("$ra", 31)
-            ]
+            ] --}}}
 
 ----------
 -- Util --
