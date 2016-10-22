@@ -11,12 +11,9 @@ import Data.Binary.Put      (putWord32be, runPut)
 import Data.ByteString.Lazy (hPut)
 import System.IO            (withFile, hPutStrLn, Handle, IOMode(..))
 import Text.Printf          (printf)
-import Control.Monad        (when, unless)
+import Control.Monad        (unless)
 import Options.Applicative
 import System.FilePath
-import qualified Text.Parsec as TP
-import qualified Text.Parsec.Token as P
-import           Text.Parsec.Language   (haskell)
 
 main :: IO ()
 main = execParser (info (helper <*> parseOpt) fullDesc) >>= \opts -> do
@@ -28,10 +25,15 @@ main = execParser (info (helper <*> parseOpt) fullDesc) >>= \opts -> do
   parseResult <- parseAsm inputFile <$> readFile inputFile
   --print parseResult
   writeBin outputBin parseResult
-  unless (noTxt opts) $ writeTxt outputTxt parseResult
+  unless (noTxt opts) $ if inHex opts
+    then writeTxtHex outputTxt parseResult
+    else writeTxtBin outputTxt parseResult
 
-writeTxt :: FilePath -> ParseResult -> IO ()
-writeTxt = write $ \h x -> hPutStrLn h (wordToBits32 x)
+writeTxtBin :: FilePath -> ParseResult -> IO ()
+writeTxtBin = write $ \h x -> hPutStrLn h (wordToBits32 x)
+
+writeTxtHex :: FilePath -> ParseResult -> IO ()
+writeTxtHex = write $ \h x -> hPutStrLn h (printf "%08lx" x)
 
 writeBin :: FilePath -> ParseResult -> IO ()
 writeBin = write $ \h x -> hPut h (runPut $ putWord32be x)
@@ -47,6 +49,7 @@ write w out (ParseResult floats insts dicf dici) =
 data CmdOpt = CmdOpt
               { outfile :: Maybe String
               , noTxt   :: Bool
+              , inHex   :: Bool
               , infile  :: String
               }
 
@@ -60,8 +63,12 @@ parseOpt = pure CmdOpt
     <=> showDefaultWith (const "SRC:.s=.bin")
   <*> switch
     $$  long "no-txt"
-    <=> help "do not write machine code in OUTFILE.txt in 01s"
+    <=> help "do not write machine code in OUTFILE.txt in text format"
     <=> showDefault
+  <*> switch
+    $$  long "hex"
+    <=> help "write machine code in OUTFILE.txt in hex digits"
+    <=> showDefaultWith (const "bits")
   <*> (argument str (metavar "SRC"))
   where
     infixr 7 $$
