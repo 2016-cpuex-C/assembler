@@ -77,55 +77,55 @@ data Inst = Move   Reg    Reg -- {{{
 opcode :: Inst -> Word32
 opcode = \case -- {{{
   Move  {} ->  1
-  Add   {} ->  2
-  Addi  {} ->  3
-  Sub   {} ->  4
-  Subi  {} ->  5
-  Mult  {} ->  6
-  Multi {} ->  7
-  Div   {} ->  8
-  Divi  {} ->  9
-  Movs  {} -> 10
-  Adds  {} -> 11
-  Subs  {} -> 12
-  Muls  {} -> 13
-  Divs  {} -> 14
-  Srl   {} -> 15
-  Sll   {} -> 16
-  Li    {} -> 17
-  La    {} -> 18
-  Lwl   {} -> 19
-  Lwr   {} -> 20
-  Lsl   {} -> 21
-  Lsr   {} -> 22
-  Sw    {} -> 23
-  Ss    {} -> 24
-  Beq   {} -> 25
-  Bne   {} -> 26
-  Blt   {} -> 27
-  Bgt   {} -> 28
-  Ceqs  {} -> 29
-  Cles  {} -> 30
-  Clts  {} -> 31
-  J     {} -> 32
-  Jr    {} -> 33
-  Jal   {} -> 34
-  Jalr  {} -> 35
-  PrintI{} -> 36
-  PrintF{} -> 37
-  PrintC{} -> 38
-  ReadI {} -> 39
-  ReadF {} -> 40
-  Sin   {} -> 41
-  Cos   {} -> 42
-  Atan  {} -> 43
-  Floor {} -> 44
-  Sqrt  {} -> 45
-  Ftoi  {} -> 46
-  Itof  {} -> 47
-  Exit  {} -> 48
-  Neg   {} -> 49
-  Negs  {} -> 50
+  Neg   {} ->  2
+  Add   {} ->  3
+  Addi  {} ->  4
+  Sub   {} ->  5
+  Subi  {} ->  6
+  Mult  {} ->  7
+  Multi {} ->  8
+  Div   {} ->  9
+  Divi  {} -> 10
+  Movs  {} -> 11
+  Negs  {} -> 12
+  Adds  {} -> 13
+  Subs  {} -> 14
+  Muls  {} -> 15
+  Divs  {} -> 16
+  Srl   {} -> 17
+  Sll   {} -> 18
+  Li    {} -> 19
+  La    {} -> 20
+  Lwl   {} -> 21
+  Lwr   {} -> 22
+  Lsl   {} -> 23
+  Lsr   {} -> 24
+  Sw    {} -> 25
+  Ss    {} -> 26
+  Beq   {} -> 27
+  Bne   {} -> 28
+  Blt   {} -> 29
+  Bgt   {} -> 30
+  Ceqs  {} -> 31
+  Cles  {} -> 32
+  Clts  {} -> 33
+  J     {} -> 34
+  Jr    {} -> 35
+  Jal   {} -> 36
+  Jalr  {} -> 37
+  PrintI{} -> 38
+  PrintF{} -> 39
+  PrintC{} -> 40
+  ReadI {} -> 41
+  ReadF {} -> 42
+  Sin   {} -> 43
+  Cos   {} -> 44
+  Atan  {} -> 45
+  Floor {} -> 46
+  Sqrt  {} -> 47
+  Ftoi  {} -> 48
+  Itof  {} -> 49
+  Exit  {} -> 50
   -- }}}
 
 ----------------
