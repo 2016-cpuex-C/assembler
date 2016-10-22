@@ -37,9 +37,9 @@ parseAsm f s = case runParser mainP initS f s of
 type Parser = ParsecT String S Identity
 
 incInstCnt :: Parser ()
-incInstCnt = modifyState (over instCnt succ)
+incInstCnt = modifyState $ over instCnt succ
 incFloatCnt :: Parser ()
-incFloatCnt = modifyState (over floatCnt succ)
+incFloatCnt = modifyState $ over floatCnt succ
 
 ------------
 -- Parser --
@@ -60,67 +60,66 @@ mainP = do
 datum :: Parser Word32
 datum = labelFDef >>= addLabelF >> symbol ".word" >> incFloatCnt >> hex
   where addLabelF lf = view floatCnt <$> getState >>=
-          modifyState . (over floatMap . M.insert lf)
+          modifyState . over floatMap . M.insert lf
 
 block :: Parser [Inst]
 block = labelIDef >>= addLabelI >> many inst
   where addLabelI li = view instCnt <$> getState >>=
-          modifyState . (over instMap . M.insert li)
+          modifyState . over instMap . M.insert li
 
 inst :: Parser Inst
-inst = incInstCnt *> choice [
-      try $ symbol "move"   >> Move   <$> reg  <.> reg
-    , try $ symbol "mov"    >> Move   <$> reg  <.> reg
-    , try $ symbol "neg"    >> Neg    <$> reg  <.> reg
-    , try $ symbol "addi"   >> Addi   <$> reg  <.> reg  <.> imm
-    , try $ symbol "add"    >> Add    <$> reg  <.> reg  <.> reg
-    , try $ symbol "subi"   >> Subi   <$> reg  <.> reg  <.> imm
-    , try $ symbol "sub"    >> Sub    <$> reg  <.> reg  <.> reg
-    , try $ symbol "multi"  >> Multi  <$> reg  <.> reg  <.> imm
-    , try $ symbol "mult"   >> Mult   <$> reg  <.> reg  <.> reg
-    , try $ symbol "divi"   >> Divi   <$> reg  <.> reg  <.> imm
-    , try $ symbol "div"    >> Div    <$> reg  <.> reg  <.> reg
-    , try $ symbol "mov.s"  >> Movs   <$> freg <.> freg
-    , try $ symbol "neg.s"  >> Negs   <$> freg <.> freg
-    , try $ symbol "add.s"  >> Adds   <$> freg <.> freg <.> freg
-    , try $ symbol "sub.s"  >> Subs   <$> freg <.> freg <.> freg
-    , try $ symbol "mul.s"  >> Muls   <$> freg <.> freg <.> freg
-    , try $ symbol "div.s"  >> Divs   <$> freg <.> freg <.> freg
-    , try $ symbol "srl"    >> Srl    <$> reg  <.> reg  <.> imm
-    , try $ symbol "sll"    >> Sll    <$> reg  <.> reg  <.> imm
-    , try $ symbol "li"     >> Li     <$> reg  <.> imm
-    , try $ symbol "la"     >> La     <$> reg  <.> labelI
-    , try $ symbol "lwl"    >> Lwl    <$> reg  <.> labelF
-    , try $ symbol "l.sl"   >> Lsl    <$> freg <.> labelF
-    , try $ symbol "beq"    >> Beq    <$> reg  <.> reg  <.> labelI
-    , try $ symbol "bne"    >> Bne    <$> reg  <.> reg  <.> labelI
-    , try $ symbol "blt"    >> Blt    <$> reg  <.> reg  <.> labelI
-    , try $ symbol "bgt"    >> Bgt    <$> reg  <.> reg  <.> labelI
-    , try $ symbol "c.eq.s" >> Ceqs   <$> freg <.> freg <.> labelI
-    , try $ symbol "c.le.s" >> Cles   <$> freg <.> freg <.> labelI
-    , try $ symbol "c.lt.s" >> Clts   <$> freg <.> freg <.> labelI
-    , try $ symbol "sin"    >> Sin    <$> freg <.> freg
-    , try $ symbol "cos"    >> Cos    <$> freg <.> freg
-    , try $ symbol "atan"   >> Atan   <$> freg <.> freg
-    , try $ symbol "floor"  >> Floor  <$> freg <.> freg
-    , try $ symbol "sqrt"   >> Sqrt   <$> freg <.> freg
-    , try $ symbol "ftoi"   >> Ftoi   <$> reg  <.> freg
-    , try $ symbol "itof"   >> Itof   <$> freg <.> reg
-    , try $ symbol "jalr"   >> Jalr   <$> reg
-    , try $ symbol "jal"    >> Jal    <$> labelI
-    , try $ symbol "jr"     >> Jr     <$> reg
-    , try $ symbol "j"      >> J      <$> labelI
-    , try $ symbol "print_i">> PrintI <$> reg
-    , try $ symbol "print_f">> PrintF <$> freg
-    , try $ symbol "print_c">> PrintC <$> reg
-    , try $ symbol "read_i" >> ReadI  <$> reg
-    , try $ symbol "read_f" >> ReadF  <$> freg
-    , try $ symbol "exit"   >> return Exit
+inst = incInstCnt >> choice [
+      try (symbol "move"   ) >> Move   <$> reg  <.> reg
+    , try (symbol "neg"    ) >> Neg    <$> reg  <.> reg
+    , try (symbol "add"    ) >> Add    <$> reg  <.> reg  <.> reg
+    , try (symbol "addi"   ) >> Addi   <$> reg  <.> reg  <.> imm
+    , try (symbol "sub"    ) >> Sub    <$> reg  <.> reg  <.> reg
+    , try (symbol "subi"   ) >> Subi   <$> reg  <.> reg  <.> imm
+    , try (symbol "mult"   ) >> Mult   <$> reg  <.> reg  <.> reg
+    , try (symbol "multi"  ) >> Multi  <$> reg  <.> reg  <.> imm
+    , try (symbol "div"    ) >> Div    <$> reg  <.> reg  <.> reg
+    , try (symbol "divi"   ) >> Divi   <$> reg  <.> reg  <.> imm
+    , try (symbol "mov.s"  ) >> Movs   <$> freg <.> freg
+    , try (symbol "neg.s"  ) >> Negs   <$> freg <.> freg
+    , try (symbol "add.s"  ) >> Adds   <$> freg <.> freg <.> freg
+    , try (symbol "sub.s"  ) >> Subs   <$> freg <.> freg <.> freg
+    , try (symbol "mul.s"  ) >> Muls   <$> freg <.> freg <.> freg
+    , try (symbol "div.s"  ) >> Divs   <$> freg <.> freg <.> freg
+    , try (symbol "srl"    ) >> Srl    <$> reg  <.> reg  <.> imm
+    , try (symbol "sll"    ) >> Sll    <$> reg  <.> reg  <.> imm
+    , try (symbol "li"     ) >> Li     <$> reg  <.> imm
+    , try (symbol "la"     ) >> La     <$> reg  <.> labelI
+    , try (symbol "lwl"    ) >> Lwl    <$> reg  <.> labelF
+    , try (symbol "l.sl"   ) >> Lsl    <$> freg <.> labelF
+    , try (symbol "beq"    ) >> Beq    <$> reg  <.> reg  <.> labelI
+    , try (symbol "bne"    ) >> Bne    <$> reg  <.> reg  <.> labelI
+    , try (symbol "blt"    ) >> Blt    <$> reg  <.> reg  <.> labelI
+    , try (symbol "bgt"    ) >> Bgt    <$> reg  <.> reg  <.> labelI
+    , try (symbol "c.eq.s" ) >> Ceqs   <$> freg <.> freg <.> labelI
+    , try (symbol "c.le.s" ) >> Cles   <$> freg <.> freg <.> labelI
+    , try (symbol "c.lt.s" ) >> Clts   <$> freg <.> freg <.> labelI
+    , try (symbol "sin"    ) >> Sin    <$> freg <.> freg
+    , try (symbol "cos"    ) >> Cos    <$> freg <.> freg
+    , try (symbol "atan"   ) >> Atan   <$> freg <.> freg
+    , try (symbol "floor"  ) >> Floor  <$> freg <.> freg
+    , try (symbol "sqrt"   ) >> Sqrt   <$> freg <.> freg
+    , try (symbol "ftoi"   ) >> Ftoi   <$> reg  <.> freg
+    , try (symbol "itof"   ) >> Itof   <$> freg <.> reg
+    , try (symbol "j"      ) >> J      <$> labelI
+    , try (symbol "jr"     ) >> Jr     <$> reg
+    , try (symbol "jal"    ) >> Jal    <$> labelI
+    , try (symbol "jalr"   ) >> Jalr   <$> reg
+    , try (symbol "print_i") >> PrintI <$> reg
+    , try (symbol "print_f") >> PrintF <$> freg
+    , try (symbol "print_c") >> PrintC <$> reg
+    , try (symbol "read_i" ) >> ReadI  <$> reg
+    , try (symbol "read_f" ) >> ReadF  <$> freg
+    , try (symbol "exit"   ) >> return Exit
     -- base + offset
-    , try $ symbol "lwr"  >> flip <$> (Lwr <$> reg ) <.> option (Imm 0) imm <*> parens reg
-    , try $ symbol "l.sr" >> flip <$> (Lsr <$> freg) <.> option (Imm 0) imm <*> parens reg
-    , try $ symbol "sw"   >> flip <$> (Sw  <$> reg ) <.> option (Imm 0) imm <*> parens reg
-    , try $ symbol "s.s"  >> flip <$> (Ss  <$> freg) <.> option (Imm 0) imm <*> parens reg
+    , try (symbol "lwr" ) >> flip <$> (Lwr <$> reg ) <.> option (Imm 0) imm <*> parens reg
+    , try (symbol "l.sr") >> flip <$> (Lsr <$> freg) <.> option (Imm 0) imm <*> parens reg
+    , try (symbol "sw"  ) >> flip <$> (Sw  <$> reg ) <.> option (Imm 0) imm <*> parens reg
+    , try (symbol "s.s" ) >> flip <$> (Ss  <$> freg) <.> option (Imm 0) imm <*> parens reg
     ]
 
 -----------
@@ -137,7 +136,7 @@ labelF :: Parser LabelF
 labelF = LabelF <$> identifier <?> "labelF"
 
 labelI :: Parser LabelI
-labelI = lexeme (LabelI <$> identifier) <?> "labelI"
+labelI =  LabelI <$> identifier <?> "labelI"
 
 labelFDef :: Parser LabelF
 labelFDef = labelF <* colon <?> "labelF def"
@@ -150,13 +149,16 @@ imm = Imm <$> int16
 
 -- # pure lexer # --
 
-lexer :: P.GenTokenParser String u Identity
-lexer = P.makeTokenParser haskellDef
-  { P.identLetter = alphaNum <|> oneOf "_'." <|> oneOf ['0'..'9']
+def :: P.GenLanguageDef String u Identity
+def = haskellDef
+  { P.identLetter = alphaNum <|> oneOf "_'."
   , P.commentLine = "#"}
 
+lexer :: P.GenTokenParser String u Identity
+lexer = P.makeTokenParser def
+
 lexeme :: Parser a -> Parser a
-lexeme p = P.lexeme lexer p
+lexeme = P.lexeme lexer
 
 identifier :: Parser String
 identifier = P.identifier lexer
@@ -170,8 +172,9 @@ natural = fromIntegral <$> P.natural lexer
 int16 :: Parser Int16
 int16 = fromIntegral <$> P.integer lexer
 
-symbol :: String -> Parser String
-symbol s = P.symbol lexer s
+symbol :: String -> Parser String -- P.symbolはだめ
+symbol s = lexeme (string s <* notFollowedBy (P.identLetter def))
+        <?> ("symbol `"++s++"`")
 
 comma :: Parser String
 comma  = P.comma lexer
