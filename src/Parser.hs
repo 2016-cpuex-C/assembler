@@ -12,7 +12,7 @@ import           Data.Map (Map)
 import qualified Data.Map as M
 import           Text.Parsec
 import qualified Text.Parsec.Token as P
-import           Text.Parsec.Language   (haskellDef)
+import           Text.Parsec.Language (haskellDef)
 
 
 data ParseResult =
@@ -31,8 +31,8 @@ initS = S M.empty M.empty 0 0
 -- main function
 parseAsm :: FilePath -> String -> ParseResult
 parseAsm f s = case runParser mainP initS f s of
-                    Right r -> r
-                    Left e -> error $ show e
+                 Right r -> r
+                 Left e -> error $ show e
 
 type Parser = ParsecT String S Identity
 
@@ -152,7 +152,8 @@ imm = Imm <$> int16
 def :: P.GenLanguageDef String u Identity
 def = haskellDef
   { P.identLetter = alphaNum <|> oneOf "_'."
-  , P.commentLine = "#"}
+  , P.commentLine = "#"
+  }
 
 lexer :: P.GenTokenParser String u Identity
 lexer = P.makeTokenParser def
@@ -163,7 +164,7 @@ lexeme = P.lexeme lexer
 identifier :: Parser String
 identifier = P.identifier lexer
 
-hex :: Parser Word32 -- x始まりらしい わけわからん
+hex :: Parser Word32 -- x始まりらしい
 hex = lexeme (fromIntegral <$> (char '0' >> P.hexadecimal lexer)) <?> "hex"
 
 natural :: Parser Int
@@ -189,6 +190,6 @@ whiteSpace :: Parser ()
 whiteSpace = P.whiteSpace lexer
 
 (<.>) :: Parser (a -> b) -> Parser a -> Parser b
-f <.> x = f <*> (comma >> x)
+f <.> x = f <*> (comma *> x)
 infixl 4 <.>
 
