@@ -151,7 +151,7 @@ imm = Imm <$> int16
 
 def :: P.GenLanguageDef String u Identity
 def = haskellDef
-  { P.identStart  = P.identStart haskellDef <|> char "_"
+  { P.identStart  = P.identStart haskellDef <|> char '_'
   , P.identLetter = alphaNum <|> oneOf "_'."
   , P.commentLine = "#"
   }
