@@ -62,6 +62,8 @@ spec = do
   describe "sim floor" $
     it "is equal to floor" $ property $
       equal1 floorFF ("print_float(floor("%ff%"))")
+  {-
+  -}
 
   describe "sim sin" $
     it "is equal to Prelude.sin" $ property $
@@ -101,8 +103,6 @@ spec = do
       sim (w "true"  "false") `shouldReturn` (1::Int)
       sim (w "false" "true" ) `shouldReturn` (1::Int)
       sim (w "false" "false") `shouldReturn` (0::Int)
-  {-
-  -}
 
 floorFF :: Float -> Float
 floorFF = fromIntegral . (floor::Float->Int)
