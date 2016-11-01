@@ -7,20 +7,19 @@ import Inst
 
 import Prelude              hiding (lex)
 import Data.Word            (Word32)
+import Data.Maybe           (fromMaybe)
 import Data.Binary.Put      (putWord32be, runPut)
 import Data.ByteString.Lazy (hPut)
 import System.IO            (withFile, hPutStrLn, Handle, IOMode(..))
 import Text.Printf          (printf)
 import Control.Monad        (unless)
-import Options.Applicative
 import System.FilePath
+import Options.Applicative
 
 main :: IO ()
 main = execParser (info (helper <*> parseOpt) fullDesc) >>= \opts -> do
   let inputFile = infile opts
-      outputBin = case outfile opts of
-                    Nothing -> inputFile -<.> "bin"
-                    Just o  -> o
+      outputBin = fromMaybe (inputFile -<.> "bin") (outfile opts)
       outputTxt = outputBin <.> "txt"
   parseResult <- parseAsm inputFile <$> readFile inputFile
   --print parseResult
@@ -69,7 +68,7 @@ parseOpt = pure CmdOpt
     $$  long "hex"
     <=> help "write machine code in OUTFILE.txt in hex digits"
     <=> showDefaultWith (const "bits")
-  <*> (argument str (metavar "SRC"))
+  <*> argument str (metavar "SRC")
   where
     infixr 7 $$
     infixr 8 <=>
