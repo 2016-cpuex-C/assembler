@@ -1,3 +1,4 @@
+{-# LANGUAGE MultiWayIf #-}
 
 module Main where
 
@@ -22,17 +23,27 @@ main = execParser (info (helper <*> parseOpt) fullDesc) >>= \opts -> do
       outputBin = fromMaybe (inputFile -<.> "bin") (outfile opts)
       outputTxt = outputBin <.> "txt"
   parseResult <- parseAsm inputFile <$> readFile inputFile
-  --print parseResult
   writeBin outputBin parseResult
-  unless (noTxt opts) $ if inHex opts
-    then writeTxtHex outputTxt parseResult
-    else writeTxtBin outputTxt parseResult
+  unless (noTxt opts) $ do
+    let writer | h && l    = writeTxtHexLiteral
+               | h         = writeTxtHex
+               | l         = writeTxtBinLiteral
+               | otherwise = writeTxtBin
+               where h = inHex opts
+                     l = literal opts
+    writer outputTxt parseResult
 
 writeTxtBin :: FilePath -> ParseResult -> IO ()
 writeTxtBin = write $ \h x -> hPutStrLn h (wordToBits32 x)
 
 writeTxtHex :: FilePath -> ParseResult -> IO ()
 writeTxtHex = write $ \h x -> hPutStrLn h (printf "%08lx" x)
+
+writeTxtBinLiteral :: FilePath -> ParseResult -> IO ()
+writeTxtBinLiteral = write $ \h x -> hPutStrLn h ("32'b"++wordToBits32 x++",")
+
+writeTxtHexLiteral :: FilePath -> ParseResult -> IO ()
+writeTxtHexLiteral = write $ \h x -> hPutStrLn h ("8'0x"++wordToBits32 x++",")
 
 writeBin :: FilePath -> ParseResult -> IO ()
 writeBin = write $ \h x -> hPut h (runPut $ putWord32be x)
@@ -49,6 +60,7 @@ data CmdOpt = CmdOpt
               { outfile :: Maybe String
               , noTxt   :: Bool
               , inHex   :: Bool
+              , literal :: Bool
               , infile  :: String
               }
 
@@ -66,8 +78,13 @@ parseOpt = pure CmdOpt
     <=> showDefault
   <*> switch
     $$  long "hex"
-    <=> help "write machine code in OUTFILE.txt in hex digits"
+    <=> help "write OUTFILE.txt in hex digits"
     <=> showDefaultWith (const "bits")
+  <*> switch
+    $$  short 'l'
+    <=> long "literal"
+    <=> help ("write OUTFILE.txt in literal: `32'11...1,` or `8'0xffffffff,`")
+    <=> showDefault
   <*> argument str (metavar "SRC")
   where
     infixr 7 $$
