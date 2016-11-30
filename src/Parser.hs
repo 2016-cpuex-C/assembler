@@ -15,15 +15,6 @@ import qualified Text.Parsec.Token as P
 import           Text.Parsec.Language (haskellDef)
 
 -------------------------------------------------------------------------------
--- Main
--------------------------------------------------------------------------------
-
-parseAsm :: FilePath -> String -> ParseResult
-parseAsm f s = case runParser mainP initS f s of
-                 Right r -> r
-                 Left e -> error $ show e
-
--------------------------------------------------------------------------------
 -- Data Types
 -------------------------------------------------------------------------------
 
@@ -38,8 +29,8 @@ data S = S { _floatMap    :: Map LabelF Word32
            , _floatCnt    :: Word32
            , _instCnt     :: Word32
            } deriving (Eq,Ord,Show)
-
 makeLenses ''S
+
 initS :: S
 initS = S M.empty M.empty 0 0
 
@@ -48,6 +39,15 @@ incInstCnt = modifyState $ over instCnt succ
 
 incFloatCnt :: Parser ()
 incFloatCnt = modifyState $ over floatCnt succ
+
+-------------------------------------------------------------------------------
+-- Main
+-------------------------------------------------------------------------------
+
+parseAsm :: FilePath -> String -> ParseResult
+parseAsm f s = case runParser mainP initS f s of
+                 Right r -> r
+                 Left e -> error $ show e
 
 -------------------------------------------------------------------------------
 -- Parser
@@ -123,6 +123,7 @@ inst = incInstCnt >> choice [
     , try (symbol "read_i" ) >> ReadI  <$> reg
     , try (symbol "read_f" ) >> ReadF  <$> freg
     , try (symbol "exit"   ) >> return Exit
+    , try (symbol "print_b") >> PrintB <$> reg
     -- base + offset
     -----------------
     , try (symbol "lwr" ) >> flip <$> (Lwr <$> reg ) <.> option (Imm 0) imm <*> parens reg

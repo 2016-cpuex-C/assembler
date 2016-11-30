@@ -72,4 +72,5 @@ instToBits dici dicf e =
     Ftoi   r1 f2    -> [regToBits  r1, fregToBits f2]
     Itof   f1 r2    -> [fregToBits f1, regToBits  r2]
     Exit            -> []
+    PrintB r1       -> [regToBits r1]
 

@@ -63,6 +63,7 @@ data Inst = Move   Reg    Reg -- {{{
           | PrintI Reg
           | PrintF FReg
           | PrintC Reg
+          | PrintB Reg
           | ReadI  Reg
           | ReadF  FReg
           | Exit
@@ -126,6 +127,7 @@ opcode = \case -- {{{
   Ftoi  {} -> 48
   Itof  {} -> 49
   Exit  {} -> 50
+  PrintB{} -> 51
   -- }}}
 
 ----------------
