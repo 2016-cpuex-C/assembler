@@ -14,36 +14,44 @@ import           Text.Parsec
 import qualified Text.Parsec.Token as P
 import           Text.Parsec.Language (haskellDef)
 
+-------------------------------------------------------------------------------
+-- Main
+-------------------------------------------------------------------------------
 
-data ParseResult =
-  ParseResult [Word32] [Inst] (Map LabelF Word32) (Map LabelI Word32)
-                 deriving Show
+parseAsm :: FilePath -> String -> ParseResult
+parseAsm f s = case runParser mainP initS f s of
+                 Right r -> r
+                 Left e -> error $ show e
+
+-------------------------------------------------------------------------------
+-- Data Types
+-------------------------------------------------------------------------------
+
+type Parser = ParsecT String S Identity
+
+data ParseResult
+  = ParseResult [Word32] [Inst] (Map LabelF Word32) (Map LabelI Word32)
+  deriving Show
 
 data S = S { _floatMap    :: Map LabelF Word32
            , _instMap     :: Map LabelI Word32
            , _floatCnt    :: Word32
            , _instCnt     :: Word32
            } deriving (Eq,Ord,Show)
+
 makeLenses ''S
 initS :: S
 initS = S M.empty M.empty 0 0
 
--- main function
-parseAsm :: FilePath -> String -> ParseResult
-parseAsm f s = case runParser mainP initS f s of
-                 Right r -> r
-                 Left e -> error $ show e
-
-type Parser = ParsecT String S Identity
-
 incInstCnt :: Parser ()
 incInstCnt = modifyState $ over instCnt succ
+
 incFloatCnt :: Parser ()
 incFloatCnt = modifyState $ over floatCnt succ
 
-------------
--- Parser --
-------------
+-------------------------------------------------------------------------------
+-- Parser
+-------------------------------------------------------------------------------
 
 mainP :: Parser ParseResult
 mainP = do
@@ -116,15 +124,20 @@ inst = incInstCnt >> choice [
     , try (symbol "read_f" ) >> ReadF  <$> freg
     , try (symbol "exit"   ) >> return Exit
     -- base + offset
+    -----------------
     , try (symbol "lwr" ) >> flip <$> (Lwr <$> reg ) <.> option (Imm 0) imm <*> parens reg
     , try (symbol "l.sr") >> flip <$> (Lsr <$> freg) <.> option (Imm 0) imm <*> parens reg
     , try (symbol "sw"  ) >> flip <$> (Sw  <$> reg ) <.> option (Imm 0) imm <*> parens reg
     , try (symbol "s.s" ) >> flip <$> (Ss  <$> freg) <.> option (Imm 0) imm <*> parens reg
     ]
 
------------
--- Lexer --
------------
+-------------------------------------------------------------------------------
+-- Lexer
+-------------------------------------------------------------------------------
+
+---------------
+-- Data Type --
+---------------
 
 reg :: Parser Reg
 reg = lexeme (fmap strToReg $ (++) <$> string "$" <*> identifier) <?> "reg"
@@ -147,7 +160,9 @@ labelIDef = labelI <* colon <?> "labelI def"
 imm :: Parser Imm
 imm = Imm <$> int16
 
--- # pure lexer # --
+----------------
+-- pure lexer --
+----------------
 
 def :: P.GenLanguageDef String u Identity
 def = haskellDef
@@ -174,7 +189,7 @@ natural = fromIntegral <$> P.natural lexer
 int16 :: Parser Int16
 int16 = fromIntegral <$> P.integer lexer
 
-symbol :: String -> Parser String -- P.symbolはだめ
+symbol :: String -> Parser String
 symbol s = lexeme (string s <* notFollowedBy (P.identLetter def))
         <?> ("symbol `"++s++"`")
 
