@@ -67,13 +67,17 @@ mainP = do
 
 datum :: Parser Word32
 datum = labelFDef >>= addLabelF >> symbol ".word" >> incFloatCnt >> hex
-  where addLabelF lf = view floatCnt <$> getState >>=
-          modifyState . over floatMap . M.insert lf
+  where addLabelF lf = do
+          fcnt <- view floatCnt <$> getState
+          modifyState $ over floatMap (M.insert lf fcnt)
 
 block :: Parser [Inst]
 block = labelIDef >>= addLabelI >> many inst
-  where addLabelI li = view instCnt <$> getState >>=
-          modifyState . over instMap . M.insert li
+  where addLabelI li = do
+          s <- getState
+          let icnt = view instCnt s
+              fcnt = view floatCnt s
+          modifyState $ over instMap (M.insert li (icnt+fcnt+1))
 
 inst :: Parser Inst
 inst = incInstCnt >> choice [
