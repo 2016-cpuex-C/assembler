@@ -77,7 +77,7 @@ block = labelIDef >>= addLabelI >> many inst
           s <- getState
           let icnt = view instCnt s
               fcnt = view floatCnt s
-          modifyState $ over instMap (M.insert li (icnt+fcnt+2))
+          modifyState $ over instMap (M.insert li (icnt+fcnt+1))
 
 inst :: Parser Inst
 inst = incInstCnt >> choice [
