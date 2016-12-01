@@ -33,28 +33,48 @@ main = execParser (info (helper <*> parseOpt) fullDesc) >>= \opts -> do
                      l = literal opts
     writer outputTxt parseResult
 
-writeTxtBin :: FilePath -> ParseResult -> IO ()
-writeTxtBin = write $ \h x -> hPutStrLn h (wordToBits32 x)
-
-writeTxtHex :: FilePath -> ParseResult -> IO ()
-writeTxtHex = write $ \h x -> hPutStrLn h (printf "%08lx" x)
+-------------------------------------------------------------------------------
+-- Writers
+-------------------------------------------------------------------------------
 
 writeTxtBinLiteral :: FilePath -> ParseResult -> IO ()
-writeTxtBinLiteral = write $ \h x -> hPutStrLn h ("32'b"++wordToBits32 x++",")
+writeTxtBinLiteral = write fw iw
+  where fw h x     = hPutStrLn h $ "32'b"++wordToBits32 x++","
+        iw h (x,i) = hPutStrLn h $ "32'b"++wordToBits32 x++", // "++show i
 
 writeTxtHexLiteral :: FilePath -> ParseResult -> IO ()
-writeTxtHexLiteral = write $ \h x -> hPutStrLn h ("8'0x"++wordToBits32 x++",")
+writeTxtHexLiteral = write fw iw
+  where fw h x     = hPutStrLn h $ "8'0x"++wordToBits32 x++","
+        iw h (x,i) = hPutStrLn h $ "8'0x"++wordToBits32 x++", // "++show i
+
+writeTxtHex :: FilePath -> ParseResult -> IO ()
+writeTxtHex = write fw iw
+  where fw h x     = hPutStrLn h $ printf "%08lx" x
+        iw h (x,_) = hPutStrLn h $ printf "%08lx" x
+
+writeTxtBin :: FilePath -> ParseResult -> IO ()
+writeTxtBin = write fw iw
+  where fw h x     = hPutStrLn h $ wordToBits32 x
+        iw h (x,_) = hPutStrLn h $ wordToBits32 x
 
 writeBin :: FilePath -> ParseResult -> IO ()
-writeBin = write $ \h x -> hPut h (runPut $ putWord32be x)
+writeBin = write fw iw
+  where fw h x     = hPut h $ runPut $ putWord32be x
+        iw h (x,_) = hPut h $ runPut $ putWord32be x
 
-write :: (Handle -> Word32 -> IO ()) -> FilePath -> ParseResult -> IO ()
-write w out (ParseResult floats insts dicf dici) =
-  withFile out WriteMode $ \h ->
-    mapM_ (w h) $ concat
-      [ floats
-      , [0xffffffff]
-      , map (decodeInst dici dicf) insts]
+write :: (Handle -> Word32 -> IO ())
+      -> (Handle -> (Word32, Inst) -> IO ())
+      -> FilePath -> ParseResult -> IO ()
+write fw iw out (ParseResult floats insts dicf dici) =
+  withFile out WriteMode $ \h -> do
+    mapM_ (fw h) floats
+    fw h 0xffffffff -- 区切り文字
+    mapM_ (iw h) $ [(decodeInst dici dicf i, i) | i <- insts]
+
+
+-------------------------------------------------------------------------------
+-- Commandline Options
+-------------------------------------------------------------------------------
 
 data CmdOpt = CmdOpt
               { outfile :: Maybe String
