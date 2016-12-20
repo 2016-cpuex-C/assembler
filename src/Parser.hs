@@ -59,14 +59,14 @@ mainP = do
   void $ symbol ".data"
   xs <- many datum
   void $ symbol ".text"
-  void $ symbol ".globl"
-  void $ symbol "main"
+  optional $ void $ symbol ".globl"
+  optional $ void $ symbol "main"
   is <- concat <$> many block
   s  <- getState
   return $ ParseResult xs is (s^.floatMap) (s^.instMap)
 
 datum :: Parser Word32
-datum = labelFDef >>= addLabelF >> symbol ".word" >> incFloatCnt >> hex
+datum = try labelFDef >>= addLabelF >> symbol ".word" >> incFloatCnt >> hex
   where addLabelF lf = do
           fcnt <- view floatCnt <$> getState
           modifyState $ over floatMap (M.insert lf fcnt)

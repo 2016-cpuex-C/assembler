@@ -23,7 +23,7 @@ runSim :: FilePath -> IO String
 runSim bintxt = readProcess "../binarysimulator/bsim" [bintxt] ""
 
 compile :: FilePath -> IO ()
-compile ml = callProcess "../compiler/min-caml" ["--log", "/dev/null", ml]
+compile ml = callProcess "../compiler/min-caml" ["-1", "--log", "/dev/null", ml]
 
 --------
 --------
