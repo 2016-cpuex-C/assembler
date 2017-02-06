@@ -4,6 +4,7 @@ module Parser where
 
 import           Types
 
+import           Prelude hiding (pred,Ordering(..))
 import           Data.Int (Int16)
 import           Data.Word (Word32)
 import           Control.Lens hiding ((<.>))
@@ -24,10 +25,10 @@ data ParseResult
   = ParseResult [Word32] [Inst] (Map LabelF Word32) (Map LabelI Word32)
   deriving Show
 
-data S = S { _floatMap    :: Map LabelF Word32
-           , _instMap     :: Map LabelI Word32
-           , _floatCnt    :: Word32
-           , _instCnt     :: Word32
+data S = S { _floatMap :: Map LabelF Word32
+           , _instMap  :: Map LabelI Word32
+           , _floatCnt :: Word32
+           , _instCnt  :: Word32
            } deriving (Eq,Ord,Show)
 makeLenses ''S
 
@@ -81,60 +82,69 @@ block = labelIDef >>= addLabelI >> many inst
 
 inst :: Parser Inst
 inst = incInstCnt >> choice [
-      try (symbol "move"   ) >> Move   <$> reg  <.> reg
-    , try (symbol "neg"    ) >> Neg    <$> reg  <.> reg
-    , try (symbol "add"    ) >> Add    <$> reg  <.> reg  <.> reg
-    , try (symbol "addi"   ) >> Addi   <$> reg  <.> reg  <.> imm
-    , try (symbol "sub"    ) >> Sub    <$> reg  <.> reg  <.> reg
-    , try (symbol "subi"   ) >> Subi   <$> reg  <.> reg  <.> imm
-    , try (symbol "mult"   ) >> Mult   <$> reg  <.> reg  <.> reg
-    , try (symbol "multi"  ) >> Multi  <$> reg  <.> reg  <.> imm
-    , try (symbol "div"    ) >> Div    <$> reg  <.> reg  <.> reg
-    , try (symbol "divi"   ) >> Divi   <$> reg  <.> reg  <.> imm
-    , try (symbol "mov.s"  ) >> Movs   <$> freg <.> freg
-    , try (symbol "neg.s"  ) >> Negs   <$> freg <.> freg
-    , try (symbol "add.s"  ) >> Adds   <$> freg <.> freg <.> freg
-    , try (symbol "sub.s"  ) >> Subs   <$> freg <.> freg <.> freg
-    , try (symbol "mul.s"  ) >> Muls   <$> freg <.> freg <.> freg
-    , try (symbol "div.s"  ) >> Divs   <$> freg <.> freg <.> freg
-    , try (symbol "srl"    ) >> Srl    <$> reg  <.> reg  <.> imm
-    , try (symbol "sll"    ) >> Sll    <$> reg  <.> reg  <.> imm
-    , try (symbol "li"     ) >> Li     <$> reg  <.> imm
-    , try (symbol "la"     ) >> La     <$> reg  <.> labelI
-    , try (symbol "lwl"    ) >> Lwl    <$> reg  <.> labelF
-    , try (symbol "l.sl"   ) >> Lsl    <$> freg <.> labelF
-    , try (symbol "beq"    ) >> Beq    <$> reg  <.> reg  <.> labelI
-    , try (symbol "bne"    ) >> Bne    <$> reg  <.> reg  <.> labelI
-    , try (symbol "blt"    ) >> Blt    <$> reg  <.> reg  <.> labelI
-    , try (symbol "bgt"    ) >> Bgt    <$> reg  <.> reg  <.> labelI
-    , try (symbol "c.eq.s" ) >> Ceqs   <$> freg <.> freg <.> labelI
-    , try (symbol "c.le.s" ) >> Cles   <$> freg <.> freg <.> labelI
-    , try (symbol "c.lt.s" ) >> Clts   <$> freg <.> freg <.> labelI
-    , try (symbol "sin"    ) >> Sin    <$> freg <.> freg
-    , try (symbol "cos"    ) >> Cos    <$> freg <.> freg
-    , try (symbol "atan"   ) >> Atan   <$> freg <.> freg
-    , try (symbol "floor"  ) >> Floor  <$> freg <.> freg
-    , try (symbol "sqrt"   ) >> Sqrt   <$> freg <.> freg
-    , try (symbol "ftoi"   ) >> Ftoi   <$> reg  <.> freg
-    , try (symbol "itof"   ) >> Itof   <$> freg <.> reg
-    , try (symbol "j"      ) >> J      <$> labelI
-    , try (symbol "jr"     ) >> Jr     <$> reg
-    , try (symbol "jal"    ) >> Jal    <$> labelI
-    , try (symbol "jalr"   ) >> Jalr   <$> reg
-    , try (symbol "print_i") >> PrintI <$> reg
-    , try (symbol "print_f") >> PrintF <$> freg
-    , try (symbol "print_c") >> PrintC <$> reg
-    , try (symbol "read_i" ) >> ReadI  <$> reg
-    , try (symbol "read_f" ) >> ReadF  <$> freg
-    , try (symbol "exit"   ) >> return Exit
-    , try (symbol "print_b") >> PrintB <$> reg
+      symbol' "move"      >> Move     <$> reg  <.> reg
+    , symbol' "neg"       >> Neg      <$> reg  <.> reg
+    , symbol' "add"       >> Add      <$> reg  <.> reg  <.> reg
+    , symbol' "addi"      >> Addi     <$> reg  <.> reg  <.> imm
+    , symbol' "sub"       >> Sub      <$> reg  <.> reg  <.> reg
+    , symbol' "mult"      >> Mult     <$> reg  <.> reg  <.> reg
+    , symbol' "multi"     >> Multi    <$> reg  <.> reg  <.> imm
+    , symbol' "div"       >> Div      <$> reg  <.> reg  <.> reg
+    , symbol' "divi"      >> Divi     <$> reg  <.> reg  <.> imm
+    , symbol' "mov.s"     >> Movs     <$> freg <.> freg
+    , symbol' "neg.s"     >> Negs     <$> freg <.> freg
+    , symbol' "add.s"     >> Adds     <$> freg <.> freg <.> freg
+    , symbol' "sub.s"     >> Subs     <$> freg <.> freg <.> freg
+    , symbol' "mul.s"     >> Muls     <$> freg <.> freg <.> freg
+    , symbol' "div.s"     >> Divs     <$> freg <.> freg <.> freg
+    , symbol' "srl"       >> Srl      <$> reg  <.> reg  <.> imm
+    , symbol' "sll"       >> Sll      <$> reg  <.> reg  <.> imm
+    , symbol' "li"        >> Li       <$> reg  <.> imm
+    , symbol' "la"        >> La       <$> reg  <.> labelI
+    , symbol' "l.sl"      >> Lsl      <$> freg <.> labelF
+    , symbol' "beq"       >> Beq      <$> reg  <.> reg  <.> labelI
+    , symbol' "bne"       >> Bne      <$> reg  <.> reg  <.> labelI
+    , symbol' "blt"       >> Blt      <$> reg  <.> reg  <.> labelI
+    , symbol' "bgt"       >> Bgt      <$> reg  <.> reg  <.> labelI
+    , symbol' "beqi"      >> Beqi     <$> reg  <.> imm5 <.> labelI
+    , symbol' "bnei"      >> Bnei     <$> reg  <.> imm5 <.> labelI
+    , symbol' "blti"      >> Blti     <$> reg  <.> imm5 <.> labelI
+    , symbol' "bgti"      >> Bgti     <$> reg  <.> imm5 <.> labelI
+    , symbol' "c.eq.s"    >> Ceqs     <$> freg <.> freg <.> labelI
+    , symbol' "c.le.s"    >> Cles     <$> freg <.> freg <.> labelI
+    , symbol' "c.lt.s"    >> Clts     <$> freg <.> freg <.> labelI
+    , symbol' "j"         >> J        <$> labelI
+    , symbol' "jr"        >> Jr       <$> reg
+    , symbol' "jal"       >> Jal      <$> labelI
+    , symbol' "jalr"      >> Jalr     <$> reg
+    , symbol' "print_c"   >> PrintC   <$> reg
+    , symbol' "read_i"    >> ReadI    <$> reg
+    , symbol' "read_f"    >> ReadF    <$> freg
+    , symbol' "and"       >> And      <$> reg  <.> reg  <.> reg
+    , symbol' "or"        >> Or       <$> reg  <.> reg  <.> reg
+    , symbol' "andi"      >> Andi     <$> reg  <.> reg  <.> imm
+    , symbol' "ori"       >> Ori      <$> reg  <.> reg  <.> imm
+    , symbol' "swap"      >> Swap     <$> reg  <.> reg
+    , symbol' "swap.s"    >> Swaps    <$> freg <.> freg
+    , symbol' "select"    >> Select   <$> reg  <.> reg  <.> reg  <.> reg
+    , symbol' "select.s"  >> Selects  <$> freg <.> freg <.> freg <.> freg
+    , symbol' "cmp"       >> Cmp      <$> pred <.> reg  <.> reg  <.> reg
+    , symbol' "cmpi"      >> Cmpi     <$> pred <.> reg  <.> reg  <.> imm5
+    , symbol' "cmp.s"     >> Cmps     <$> pred <.> reg  <.> freg <.> freg
+    , symbol' "cvt.s.w"   >> Cvtsw    <$> freg <.> reg
+    , symbol' "cvt.w.s"   >> Cvtws    <$> reg  <.> freg
+    , symbol' "madd.s"    >> MAdds    <$> freg <.> freg <.> freg <.> freg
+    , symbol' "exit"      >> return Exit
+
     -- base + offset
     -----------------
-    , try (symbol "lwr" ) >> flip <$> (Lwr <$> reg ) <.> option (Imm 0) imm <*> parens reg
-    , try (symbol "l.sr") >> flip <$> (Lsr <$> freg) <.> option (Imm 0) imm <*> parens reg
-    , try (symbol "sw"  ) >> flip <$> (Sw  <$> reg ) <.> option (Imm 0) imm <*> parens reg
-    , try (symbol "s.s" ) >> flip <$> (Ss  <$> freg) <.> option (Imm 0) imm <*> parens reg
+    , symbol' "lwr"     >> flip <$> (Lwr <$> reg ) <.> imm' <*> parens reg
+    , symbol' "l.sr"    >> flip <$> (Lsr <$> freg) <.> imm' <*> parens reg
+    , symbol' "sw"      >> flip <$> (Sw  <$> reg ) <.> imm' <*> parens reg
+    , symbol' "s.s"     >> flip <$> (Ss  <$> freg) <.> imm' <*> parens reg
     ]
+    where symbol' = try.symbol
+          imm'    = option (Imm 0) imm
 
 -------------------------------------------------------------------------------
 -- Lexer
@@ -164,6 +174,20 @@ labelIDef = labelI <* colon <?> "labelI def"
 
 imm :: Parser Imm
 imm = Imm <$> int16
+
+imm5 :: Parser Imm5
+imm5 = Imm5 <$> int16
+
+pred :: Parser Predicate
+pred = choice [
+    symbol' "eq" >> return EQ
+  , symbol' "ne" >> return NE
+  , symbol' "le" >> return LE
+  , symbol' "ge" >> return GE
+  , symbol' "lt" >> return LT
+  , symbol' "gt" >> return GT
+  ]
+  where symbol' = try.symbol
 
 ----------------
 -- pure lexer --
