@@ -16,7 +16,7 @@ assemble infile = do
   let outfile = infile -<.> "bin.txt"
   (ParseResult floats insts dicf dici) <- parseAsm infile <$> readFile infile
   withFile outfile WriteMode $ \h ->
-    mapM_ (\x -> hPutStrLn h (wordToBits32 x)) $ concat
+    mapM_ (\x -> hPutStrLn h (toStr $ wordToBits32 x)) $ concat
       [floats, [0xffffffff], map (decodeInst dici dicf) insts]
 
 runSim :: FilePath -> IO String

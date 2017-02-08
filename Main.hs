@@ -68,21 +68,20 @@ write :: (Handle -> Word32 -> IO ())
 write fw iw out (ParseResult floats insts dicf dici) =
   withFile out WriteMode $ \h -> do
     mapM_ (fw h) floats
-    fw h 0xffffffff -- 区切り文字
+    fw h 0xffffffff -- 区切り
     mapM_ (iw h) $ [(decodeInst dici dicf i, i) | i <- insts]
-
 
 -------------------------------------------------------------------------------
 -- Commandline Options
 -------------------------------------------------------------------------------
 
 data CmdOpt = CmdOpt
-              { outfile :: Maybe String
-              , noTxt   :: Bool
-              , inHex   :: Bool
-              , literal :: Bool
-              , infile  :: String
-              }
+  { outfile :: Maybe String
+  , noTxt   :: Bool
+  , inHex   :: Bool
+  , literal :: Bool
+  , infile  :: String
+  }
 
 parseOpt :: Parser CmdOpt
 parseOpt = pure CmdOpt

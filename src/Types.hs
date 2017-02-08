@@ -50,8 +50,10 @@ data Inst -- {{{
   | Subs      FReg    FReg    FReg
   | Muls      FReg    FReg    FReg
   | Divs      FReg    FReg    FReg
-  | Srl       Reg     Reg     Imm
-  | Sll       Reg     Reg     Imm
+  | Srli      Reg     Reg     Imm
+  | Slli      Reg     Reg     Imm
+  | Srl       Reg     Reg     Reg
+  | Sll       Reg     Reg     Reg
   | Li        Reg     Imm
   | La        Reg     LabelI
   | Lwr       Reg     Reg     Imm
@@ -153,6 +155,8 @@ opcode = \case -- {{{
   Jalr   {} -> 37
   --PrintI {} -> 38
   --PrintF {} -> 39
+  Srli   {} -> 38
+  Slli   {} -> 39
   PrintC {} -> 40
   ReadI  {} -> 41
   ReadF  {} -> 42

@@ -97,8 +97,10 @@ inst = incInstCnt >> choice [
     , symbol' "sub.s"     >> Subs     <$> freg <.> freg <.> freg
     , symbol' "mul.s"     >> Muls     <$> freg <.> freg <.> freg
     , symbol' "div.s"     >> Divs     <$> freg <.> freg <.> freg
-    , symbol' "srl"       >> Srl      <$> reg  <.> reg  <.> imm
-    , symbol' "sll"       >> Sll      <$> reg  <.> reg  <.> imm
+    , symbol' "srl"       >> Srl      <$> reg  <.> reg  <.> reg
+    , symbol' "sll"       >> Sll      <$> reg  <.> reg  <.> reg
+    , symbol' "srli"      >> Srli     <$> reg  <.> reg  <.> imm
+    , symbol' "slli"      >> Slli     <$> reg  <.> reg  <.> imm
     , symbol' "li"        >> Li       <$> reg  <.> imm
     , symbol' "la"        >> La       <$> reg  <.> labelI
     , symbol' "l.sl"      >> Lsl      <$> freg <.> labelF
