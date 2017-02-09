@@ -7,7 +7,7 @@ import           Types
 import           Data.Int (Int16)
 import           Data.Word (Word32)
 import           Control.Lens hiding ((<.>))
-import           Control.Monad (void)
+import Control.Monad (unless, void)
 import           Data.Map (Map)
 import qualified Data.Map as M
 import           Text.Parsec
@@ -161,10 +161,10 @@ labelI :: Parser LabelI
 labelI =  LabelI <$> identifier <?> "labelI"
 
 labelFDef :: Parser LabelF
-labelFDef = labelF <* colon <?> "labelF def"
+labelFDef = sol "labelFDef" >> labelF <* colon <?> "labelF def"
 
 labelIDef :: Parser LabelI
-labelIDef = labelI <* colon <?> "labelI def"
+labelIDef = sol "labelIDef" >> labelI <* colon <?> "labelI def"
 
 imm :: Parser Imm
 imm = Imm <$> int16
@@ -213,6 +213,11 @@ parens = P.parens lexer
 
 whiteSpace :: Parser ()
 whiteSpace = P.whiteSpace lexer
+
+sol :: String -> Parser ()
+sol s = do
+  col <- sourceColumn <$> getPosition
+  unless (col==1) $ fail $ "sol: " ++ s
 
 (<.>) :: Parser (a -> b) -> Parser a -> Parser b
 f <.> x = f <*> (comma *> x)
