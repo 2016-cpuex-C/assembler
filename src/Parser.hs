@@ -8,7 +8,7 @@ import           Prelude hiding (pred,Ordering(..))
 import           Data.Int (Int16)
 import           Data.Word (Word32)
 import           Control.Lens hiding ((<.>))
-import           Control.Monad (void)
+import Control.Monad (unless, void)
 import           Data.Map (Map)
 import qualified Data.Map as M
 import           Text.Parsec
@@ -60,8 +60,6 @@ mainP = do
   void $ symbol ".data"
   xs <- many datum
   void $ symbol ".text"
-  optional $ void $ symbol ".globl"
-  {-optional $ void $ symbol "main"-}
   is <- concat <$> many block
   s  <- getState
   whiteSpace
@@ -126,8 +124,10 @@ inst = incInstCnt >> choice [
     , symbol' "read_f"    >> ReadF    <$> freg
     , symbol' "and"       >> And      <$> reg  <.> reg  <.> reg
     , symbol' "or"        >> Or       <$> reg  <.> reg  <.> reg
+    , symbol' "xor"       >> Xor      <$> reg  <.> reg  <.> reg
     , symbol' "andi"      >> Andi     <$> reg  <.> reg  <.> imm
     , symbol' "ori"       >> Ori      <$> reg  <.> reg  <.> imm
+    , symbol' "xori"      >> Xori     <$> reg  <.> reg  <.> imm
     , symbol' "swap"      >> Swap     <$> reg  <.> reg
     , symbol' "swap.s"    >> Swaps    <$> freg <.> freg
     , symbol' "select.s"  >> Selects  <$> freg <.> reg  <.> freg <.> freg

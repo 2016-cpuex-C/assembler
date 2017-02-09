@@ -81,12 +81,14 @@ data Inst -- {{{
   | ReadF     FReg
   | And       Reg     Reg     Reg
   | Or        Reg     Reg     Reg
+  | Xor       Reg     Reg     Reg
   | Andi      Reg     Reg     Imm
   | Ori       Reg     Reg     Imm
+  | Xori      Reg     Reg     Imm
   | Swap      Reg     Reg
   | Swaps     FReg    FReg
   | Select    Reg     Reg     Reg     Reg
-  | Selects   FReg    FReg    FReg    FReg
+  | Selects   FReg    Reg     FReg    FReg
   | Cmp       Predicate   Reg     Reg     Reg
   | Cmpi      Predicate   Reg     Reg     Imm5
   | Cmps      Predicate   Reg     FReg    FReg
@@ -163,10 +165,10 @@ opcode = \case -- {{{
   Beqi   {} -> 43
   And    {} -> 44
   Or     {} -> 45
-  -- XOr {} -> 46
+  Xor    {} -> 46
   Andi   {} -> 47
   Ori    {} -> 48
-  -- XOri{} -> 49
+  Xori   {} -> 49
   Exit   {} -> 50
   Swap   {} -> 51
   Swaps  {} -> 52
