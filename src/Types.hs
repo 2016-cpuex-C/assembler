@@ -32,8 +32,8 @@ data Inst = Move   Reg    Reg -- {{{
           | Subs   FReg   FReg   FReg
           | Muls   FReg   FReg   FReg
           | Divs   FReg   FReg   FReg
-          | Srl    Reg    Reg    Imm
-          | Sll    Reg    Reg    Imm
+          | Srl    Reg    Reg    Reg
+          | Sll    Reg    Reg    Reg
           | Li     Reg    Imm
           | La     Reg    LabelI
           | Lwl    Reg    LabelF
@@ -69,6 +69,8 @@ data Inst = Move   Reg    Reg -- {{{
           | Exit
           | Neg    Reg    Reg
           | Negs   FReg   FReg
+          | Srli   Reg    Reg    Imm
+          | Slli   Reg    Reg    Imm
           deriving (Eq, Ord, Show)-- }}}
 
 ------------
@@ -128,6 +130,8 @@ opcode = \case -- {{{
   Itof  {} -> 49
   Exit  {} -> 50
   PrintB{} -> 51
+  Srli  {} -> 62
+  Slli  {} -> 63
   -- }}}
 
 ----------------
