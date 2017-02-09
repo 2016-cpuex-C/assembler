@@ -130,8 +130,8 @@ inst = incInstCnt >> choice [
     , symbol' "ori"       >> Ori      <$> reg  <.> reg  <.> imm
     , symbol' "swap"      >> Swap     <$> reg  <.> reg
     , symbol' "swap.s"    >> Swaps    <$> freg <.> freg
+    , symbol' "select.s"  >> Selects  <$> freg <.> reg  <.> freg <.> freg
     , symbol' "select"    >> Select   <$> reg  <.> reg  <.> reg  <.> reg
-    , symbol' "select.s"  >> Selects  <$> freg <.> freg <.> freg <.> freg
     , symbol' "cmp"       >> Cmp      <$> pred <.> reg  <.> reg  <.> reg
     , symbol' "cmpi"      >> Cmpi     <$> pred <.> reg  <.> reg  <.> imm5
     , symbol' "cmp.s"     >> Cmps     <$> pred <.> reg  <.> freg <.> freg
