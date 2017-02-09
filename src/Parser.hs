@@ -61,9 +61,11 @@ mainP = do
   xs <- many datum
   void $ symbol ".text"
   optional $ void $ symbol ".globl"
-  optional $ void $ symbol "main"
+  {-optional $ void $ symbol "main"-}
   is <- concat <$> many block
   s  <- getState
+  whiteSpace
+  eof
   return $ ParseResult xs is (s^.floatMap) (s^.instMap)
 
 datum :: Parser Word32
