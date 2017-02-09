@@ -171,10 +171,10 @@ labelI :: Parser LabelI
 labelI =  LabelI <$> identifier <?> "labelI"
 
 labelFDef :: Parser LabelF
-labelFDef = labelF <* colon <?> "labelF def"
+labelFDef = sol "labelFDef" >> labelF <* colon <?> "labelF def"
 
 labelIDef :: Parser LabelI
-labelIDef = labelI <* colon <?> "labelI def"
+labelIDef = sol "labelIDef" >> labelI <* colon <?> "labelI def"
 
 imm :: Parser Imm
 imm = Imm <$> int16
@@ -237,6 +237,12 @@ parens = P.parens lexer
 
 whiteSpace :: Parser ()
 whiteSpace = P.whiteSpace lexer
+
+sol :: String -> Parser ()
+sol s = do
+  pos <- getPosition
+  let col = sourceColumn pos
+  unless (col == 1) $ fail $ "sol: " ++ s
 
 (<.>) :: Parser (a -> b) -> Parser a -> Parser b
 f <.> x = f <*> (comma *> x)
