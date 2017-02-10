@@ -181,7 +181,11 @@ imm :: Parser Imm
 imm = Imm <$> int16
 
 imm5 :: Parser Imm5
-imm5 = Imm5 <$> int16
+imm5 = do
+  n <- int16
+  if n < -16 || n > 15
+    then fail $ show n ++ " is out of 5bit"
+    else return $ Imm5 n
 
 pred :: Parser Predicate
 pred = choice [
@@ -221,7 +225,11 @@ natural :: Parser Int
 natural = fromIntegral <$> P.natural lexer
 
 int16 :: Parser Int16
-int16 = fromIntegral <$> P.integer lexer
+int16 = do
+  n <- P.integer lexer
+  if n < -32768 || n > 32767
+    then fail $ show n ++ " is out of 16 bits"
+    else return $ fromIntegral n
 
 symbol :: String -> Parser String
 symbol s = lexeme (string s <* notFollowedBy (P.identLetter def))
