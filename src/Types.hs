@@ -36,6 +36,7 @@ data Predicate = EQ | NE | LE | GE | LT | GT
 
 data Inst -- {{{
   = Move      Reg     Reg
+  | Sqrt      FReg    FReg
   | Neg       Reg     Reg
   | Add       Reg     Reg     Reg
   | Addi      Reg     Reg     Imm
@@ -118,6 +119,7 @@ instance ToBits Predicate where
 
 opcode :: Inst -> Word32
 opcode = \case -- {{{
+  Sqrt   {} ->  0
   Move   {} ->  1
   Neg    {} ->  2
   Add    {} ->  3

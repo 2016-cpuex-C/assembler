@@ -83,6 +83,7 @@ block = labelIDef >>= addLabelI >> many inst
 inst :: Parser Inst
 inst = incInstCnt >> choice [
       symbol' "move"      >> Move     <$> reg  <.> reg
+    , symbol' "sqrt"      >> Sqrt     <$> freg <.> freg
     , symbol' "neg"       >> Neg      <$> reg  <.> reg
     , symbol' "add"       >> Add      <$> reg  <.> reg  <.> reg
     , symbol' "addi"      >> Addi     <$> reg  <.> reg  <.> imm

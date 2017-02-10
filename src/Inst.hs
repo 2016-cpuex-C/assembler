@@ -23,6 +23,7 @@ instToBits dici dicf e =
   let  liToBits' = labeliToBits dici
        lfToBits' = labelfToBits dicf
   in paddingB 32 . concat . (opcodeBits e:) $ case e of
+    Sqrt    f1 f2       -> [toBits f1, toBits f2]
     Move    r1 r2       -> [toBits r1, toBits r2]
     Neg     r1 r2       -> [toBits r1, toBits r2]
     Add     r1 r2 r3    -> [toBits r1, toBits r2, toBits r3]
@@ -77,9 +78,9 @@ instToBits dici dicf e =
     Swaps   f1 f2       -> [toBits f1, toBits f2]
     Select  r1 r2 r3 r4 -> map toBits [r1,r2,r3,r4]
     Selects f1 r2 f3 f4 -> [toBits f1, toBits r2, toBits f3, toBits f4]
-    Cmp     p  r1 r2 r3 -> toBits p : map toBits [r1,r2,r3]
-    Cmpi    p  r1 r2 i  -> toBits p : map toBits [r1,r2] ++ [toBits i]
-    Cmps    p  r1 f2 f3 -> toBits p : toBits r1 : map toBits [f2,f3]
+    Cmp     p  r1 r2 r3 -> map toBits [r1,r2,r3]             ++ [toBits p]
+    Cmpi    p  r1 r2 i  -> map toBits [r1,r2] ++ [toBits i]  ++ [toBits p]
+    Cmps    p  r1 f2 f3 -> toBits r1 : map toBits [f2,f3]    ++ [toBits p]
     Cvtsw   f  r        -> [toBits f, toBits r]
     Cvtws   r  f        -> [toBits r, toBits f]
     MAdds   f1 f2 f3 f4 -> map toBits [f1,f2,f3,f4]
