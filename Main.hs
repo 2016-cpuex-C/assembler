@@ -65,11 +65,13 @@ writeBin = write fw iw
 write :: (Handle -> Word32 -> IO ())
       -> (Handle -> (Word32, Inst) -> IO ())
       -> FilePath -> ParseResult -> IO ()
-write fw iw out (ParseResult floats insts dicf dici) =
+write fw iw out (ParseResult floats insts dicf dici) = do
   withFile out WriteMode $ \h -> do
     mapM_ (fw h) floats
     fw h 0xffffffff -- 区切り
     mapM_ (iw h) $ [(decodeInst dici dicf i, i) | i <- insts]
+  --print floats
+  --print dicf
 
 -------------------------------------------------------------------------------
 -- Commandline Options

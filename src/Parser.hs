@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE MultiWayIf #-}
 
 module Parser where
 
@@ -14,7 +15,6 @@ import qualified Data.Map as M
 import           Text.Parsec
 import qualified Text.Parsec.Token as P
 import           Text.Parsec.Language (haskellDef)
-import Debug.Trace (traceM)
 
 -------------------------------------------------------------------------------
 -- Data Types
@@ -87,7 +87,7 @@ addLabelI li = do
   modifyState $ over instMap (M.insert li icnt)
 
 inst :: Parser Inst
-inst = incInstCnt >> choice [
+inst = incInstCnt >> choice [-- {{{
       symbol' "move"      >> Move     <$> reg  <.> reg
     , symbol' "sqrt"      >> Sqrt     <$> freg <.> freg
     , symbol' "neg"       >> Neg      <$> reg  <.> reg
@@ -160,25 +160,26 @@ inst = incInstCnt >> choice [
     ]
     where symbol' = try.symbol
           imm'    = option (Imm 0) imm
+-- }}}
 
 loadImmidiate :: Parser Inst
 loadImmidiate = do
-  dest <- reg
-  void comma
+  dest <- reg <* comma
   n    <- integer
-  if within16 n then
-    return $ Li dest (Imm $ fromIntegral n)
-  else do
-    lf <- freshLabelF
-    addLabelF lf
-    incFloatCnt
-    modifyState $ over bigInts $ (fromIntegral n:)
-    return $ Lwl dest lf
+  if| within16 n ->
+        return $ Li dest (Imm $ fromIntegral n)
+    | otherwise -> do
+        lf <- freshLabelF
+        modifyState $ over bigInts $ (fromIntegral n:)
+        return $ Lwl dest lf
 
 freshLabelF :: Parser LabelF
 freshLabelF = do
   fcnt <- view floatCnt <$> getState
-  return $ LabelF $ "bigint." ++ show fcnt
+  let lf = LabelF $ "bigint." ++ show fcnt
+  addLabelF lf
+  incFloatCnt
+  return lf
 
 -------------------------------------------------------------------------------
 -- Lexer
