@@ -57,6 +57,7 @@ data Inst -- {{{
   | Sll       Reg     Reg     Reg
   | Li        Reg     Imm
   | La        Reg     LabelI
+  | Lwl       Reg     LabelF
   | Lwr       Reg     Reg     Imm
   | Lsl       FReg    LabelF
   | Lsr       FReg    Reg     Imm
@@ -140,7 +141,7 @@ opcode = \case -- {{{
   Sll    {} -> 18
   Li     {} -> 19
   La     {} -> 20
-  --Lwl    {} -> 21
+  Lwl    {} -> 21
   Lwr    {} -> 22
   Lsl    {} -> 23
   Lsr    {} -> 24

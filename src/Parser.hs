@@ -104,6 +104,7 @@ inst = incInstCnt >> choice [
     , symbol' "slli"      >> Slli     <$> reg  <.> reg  <.> imm
     , symbol' "li"        >> Li       <$> reg  <.> imm
     , symbol' "la"        >> La       <$> reg  <.> labelI
+    , symbol' "lwl"       >> Lwl      <$> reg  <.> labelF
     , symbol' "l.sl"      >> Lsl      <$> freg <.> labelF
     , symbol' "beq"       >> Beq      <$> reg  <.> reg  <.> labelI
     , symbol' "bne"       >> Bne      <$> reg  <.> reg  <.> labelI

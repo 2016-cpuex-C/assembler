@@ -45,6 +45,7 @@ instToBits dici dicf e =
     Slli    r1 r2 i     -> [toBits r1, toBits r2, toBits i]
     Li      r1 i        -> [toBits r1, toBits i]
     La      r1 li       -> [toBits r1, liToBits' li]
+    Lwl     r1 lf       -> [toBits r1, lfToBits' lf]
     Lwr     r1 r2 i     -> [toBits r1, toBits r2, toBits i]
     Lsl     f1 lf       -> [toBits f1, lfToBits' lf]
     Lsr     f1 r2 i     -> [toBits f1, toBits r2, toBits i]
