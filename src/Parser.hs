@@ -14,6 +14,7 @@ import qualified Data.Map as M
 import           Text.Parsec
 import qualified Text.Parsec.Token as P
 import           Text.Parsec.Language (haskellDef)
+import Debug.Trace (traceM)
 
 -------------------------------------------------------------------------------
 -- Data Types
@@ -29,11 +30,12 @@ data S = S { _floatMap :: Map LabelF Word32
            , _instMap  :: Map LabelI Word32
            , _floatCnt :: Word32
            , _instCnt  :: Word32
+           , _bigInts  :: [Word32]
            } deriving (Eq,Ord,Show)
 makeLenses ''S
 
 initS :: S
-initS = S M.empty M.empty 0 0
+initS = S M.empty M.empty 0 0 []
 
 incInstCnt :: Parser ()
 incInstCnt = modifyState $ over instCnt succ
@@ -65,20 +67,24 @@ mainP = do
   whiteSpace
   eof
   let fcnt = view floatCnt s
-  return $ ParseResult xs is (s^.floatMap) (M.map (+fcnt) $ s^.instMap)
+      ws   = reverse $ view bigInts  s
+  return $ ParseResult (xs++ws) is (s^.floatMap) (M.map (+(fcnt+1)) $ s^.instMap)
 
 datum :: Parser Word32
 datum = try labelFDef >>= addLabelF >> symbol ".word" >> incFloatCnt >> hex
-  where addLabelF lf = do
-          fcnt <- view floatCnt <$> getState
-          modifyState $ over floatMap (M.insert lf fcnt)
+
+addLabelF :: LabelF -> Parser ()
+addLabelF lf = do
+  fcnt <- view floatCnt <$> getState
+  modifyState $ over floatMap (M.insert lf fcnt)
 
 block :: Parser [Inst]
 block = labelIDef >>= addLabelI >> many inst
-  where addLabelI li = do
-          s <- getState
-          let icnt = view instCnt s
-          modifyState $ over instMap (M.insert li (icnt+1))
+
+addLabelI :: LabelI -> Parser ()
+addLabelI li = do
+  icnt <- view instCnt <$> getState
+  modifyState $ over instMap (M.insert li icnt)
 
 inst :: Parser Inst
 inst = incInstCnt >> choice [
@@ -161,9 +167,18 @@ loadImmidiate = do
   void comma
   n    <- integer
   if within16 n then
-    return (Li dest (Imm $ fromIntegral n))
+    return $ Li dest (Imm $ fromIntegral n)
   else do
-    error "hoge"
+    lf <- freshLabelF
+    addLabelF lf
+    incFloatCnt
+    modifyState $ over bigInts $ (fromIntegral n:)
+    return $ Lwl dest lf
+
+freshLabelF :: Parser LabelF
+freshLabelF = do
+  fcnt <- view floatCnt <$> getState
+  return $ LabelF $ "bigint." ++ show fcnt
 
 -------------------------------------------------------------------------------
 -- Lexer
