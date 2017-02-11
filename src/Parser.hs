@@ -8,7 +8,7 @@ import           Prelude hiding (pred,Ordering(..))
 import           Data.Int (Int16)
 import           Data.Word (Word32)
 import           Control.Lens hiding ((<.>))
-import Control.Monad (unless, void)
+import           Control.Monad (unless, void)
 import           Data.Map (Map)
 import qualified Data.Map as M
 import           Text.Parsec
@@ -64,7 +64,8 @@ mainP = do
   s  <- getState
   whiteSpace
   eof
-  return $ ParseResult xs is (s^.floatMap) (s^.instMap)
+  let fcnt = view floatCnt s
+  return $ ParseResult xs is (s^.floatMap) (M.map (+fcnt) $ s^.instMap)
 
 datum :: Parser Word32
 datum = try labelFDef >>= addLabelF >> symbol ".word" >> incFloatCnt >> hex
@@ -77,8 +78,7 @@ block = labelIDef >>= addLabelI >> many inst
   where addLabelI li = do
           s <- getState
           let icnt = view instCnt s
-              fcnt = view floatCnt s
-          modifyState $ over instMap (M.insert li (icnt+fcnt+1))
+          modifyState $ over instMap (M.insert li (icnt+1))
 
 inst :: Parser Inst
 inst = incInstCnt >> choice [
@@ -102,7 +102,6 @@ inst = incInstCnt >> choice [
     , symbol' "sll"       >> Sll      <$> reg  <.> reg  <.> reg
     , symbol' "srli"      >> Srli     <$> reg  <.> reg  <.> imm
     , symbol' "slli"      >> Slli     <$> reg  <.> reg  <.> imm
-    , symbol' "li"        >> Li       <$> reg  <.> imm
     , symbol' "la"        >> La       <$> reg  <.> labelI
     , symbol' "lwl"       >> Lwl      <$> reg  <.> labelF
     , symbol' "l.sl"      >> Lsl      <$> freg <.> labelF
@@ -142,6 +141,10 @@ inst = incInstCnt >> choice [
     , symbol' "madd.s"    >> MAdds    <$> freg <.> freg <.> freg <.> freg
     , symbol' "exit"      >> return Exit
 
+    -- load immidiate
+    {-, symbol' "li"        >> Li       <$> reg  <.> imm-}
+    , symbol' "li"        >> loadImmidiate
+
     -- base + offset
     -----------------
     , symbol' "lwr"     >> flip <$> (Lwr <$> reg ) <.> imm' <*> parens reg
@@ -151,6 +154,16 @@ inst = incInstCnt >> choice [
     ]
     where symbol' = try.symbol
           imm'    = option (Imm 0) imm
+
+loadImmidiate :: Parser Inst
+loadImmidiate = do
+  dest <- reg
+  void comma
+  n    <- integer
+  if within16 n then
+    return (Li dest (Imm $ fromIntegral n))
+  else do
+    error "hoge"
 
 -------------------------------------------------------------------------------
 -- Lexer
@@ -183,10 +196,10 @@ imm = Imm <$> int16
 
 imm5 :: Parser Imm5
 imm5 = do
-  n <- int16
-  if n < -16 || n > 15
+  n <- integer
+  if not $ within5 n
     then fail $ show n ++ " is out of 5bit"
-    else return $ Imm5 n
+    else return $ Imm5 $ fromIntegral n
 
 pred :: Parser Predicate
 pred = choice [
@@ -225,10 +238,13 @@ hex = lexeme (fromIntegral <$> (char '0' >> P.hexadecimal lexer)) <?> "hex"
 natural :: Parser Int
 natural = fromIntegral <$> P.natural lexer
 
+integer :: Parser Integer
+integer = P.integer lexer
+
 int16 :: Parser Int16
 int16 = do
-  n <- P.integer lexer
-  if n < -32768 || n > 32767
+  n <- integer
+  if not $ within16 n
     then fail $ show n ++ " is out of 16 bits"
     else return $ fromIntegral n
 
@@ -257,4 +273,14 @@ sol s = do
 (<.>) :: Parser (a -> b) -> Parser a -> Parser b
 f <.> x = f <*> (comma *> x)
 infixl 4 <.>
+
+-------------------------------------------------------------------------------
+-- Util
+-------------------------------------------------------------------------------
+
+within16 :: Integer -> Bool
+within16 n = -32768 <= n && n <= 32767
+
+within5 :: Integer -> Bool
+within5 n = -16 <= n && n <= 15
 
