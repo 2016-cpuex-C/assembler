@@ -2,6 +2,7 @@
 
 module Types where
 
+import           Prelude hiding (Ordering(..))
 import           Data.Word (Word32)
 import qualified Data.Map as M
 import           Control.Exception.Base (assert)
@@ -10,68 +11,108 @@ import           Data.Char  (digitToInt)
 import           Data.Int   (Int16)
 import           Data.Bits (testBit)
 
-type Bits = String
+-------------------------------------------------------------------------------
+-- Types
+-------------------------------------------------------------------------------
+
+--type Bits = String
+type Bits = [Bit]
+data Bit = I | O
+  deriving (Show,Eq,Ord)
+
+toStr :: Bits -> String
+toStr = map $ \case
+  I -> '1'
+  O -> '0'
 
 newtype Reg    = Reg    Word32 deriving (Eq,Ord,Show)
 newtype FReg   = FReg   Word32 deriving (Eq,Ord,Show)
-newtype Imm    = Imm    Int16  deriving (Eq,Ord,Show) -- Int16
+newtype Imm    = Imm    Int16  deriving (Eq,Ord,Show)
+newtype Imm5   = Imm5   Int16  deriving (Eq,Ord,Show)
 newtype LabelF = LabelF String deriving (Eq,Ord,Show)
 newtype LabelI = LabelI String deriving (Eq,Ord,Show)
+data Predicate = EQ | NE | LE | GE | LT | GT
+               deriving (Show,Eq,Ord,Enum)
 
-data Inst = Move   Reg    Reg -- {{{
-          | Add    Reg    Reg    Reg
-          | Addi   Reg    Reg    Imm
-          | Sub    Reg    Reg    Reg
-          | Subi   Reg    Reg    Imm
-          | Mult   Reg    Reg    Reg
-          | Multi  Reg    Reg    Imm
-          | Div    Reg    Reg    Reg
-          | Divi   Reg    Reg    Imm
-          | Movs   FReg   FReg
-          | Adds   FReg   FReg   FReg
-          | Subs   FReg   FReg   FReg
-          | Muls   FReg   FReg   FReg
-          | Divs   FReg   FReg   FReg
-          | Srl    Reg    Reg    Reg
-          | Sll    Reg    Reg    Reg
-          | Li     Reg    Imm
-          | La     Reg    LabelI
-          | Lwl    Reg    LabelF
-          | Lwr    Reg    Reg    Imm
-          | Lsl    FReg   LabelF
-          | Lsr    FReg   Reg    Imm
-          | Sw     Reg    Reg    Imm
-          | Ss     FReg   Reg    Imm
-          | Beq    Reg    Reg    LabelI
-          | Bne    Reg    Reg    LabelI
-          | Blt    Reg    Reg    LabelI
-          | Bgt    Reg    Reg    LabelI
-          | Ceqs   FReg   FReg   LabelI
-          | Cles   FReg   FReg   LabelI
-          | Clts   FReg   FReg   LabelI
-          | Sin    FReg   FReg
-          | Cos    FReg   FReg
-          | Atan   FReg   FReg
-          | Floor  FReg   FReg
-          | Sqrt   FReg   FReg
-          | Ftoi   Reg    FReg
-          | Itof   FReg   Reg
-          | J      LabelI
-          | Jal    LabelI
-          | Jr     Reg
-          | Jalr   Reg
-          | PrintI Reg
-          | PrintF FReg
-          | PrintC Reg
-          | PrintB Reg
-          | ReadI  Reg
-          | ReadF  FReg
-          | Exit
-          | Neg    Reg    Reg
-          | Negs   FReg   FReg
-          | Srli   Reg    Reg    Imm
-          | Slli   Reg    Reg    Imm
-          deriving (Eq, Ord, Show)-- }}}
+data Inst -- {{{
+  = Move      Reg     Reg
+  | Sqrt      FReg    FReg
+  | Neg       Reg     Reg
+  | Add       Reg     Reg     Reg
+  | Addi      Reg     Reg     Imm
+  | Sub       Reg     Reg     Reg
+  | Mult      Reg     Reg     Reg
+  | Multi     Reg     Reg     Imm
+  | Div       Reg     Reg     Reg
+  | Divi      Reg     Reg     Imm
+  | Movs      FReg    FReg
+  | Negs      FReg    FReg
+  | Adds      FReg    FReg    FReg
+  | Subs      FReg    FReg    FReg
+  | Muls      FReg    FReg    FReg
+  | Divs      FReg    FReg    FReg
+  | Srli      Reg     Reg     Imm
+  | Slli      Reg     Reg     Imm
+  | Srl       Reg     Reg     Reg
+  | Sll       Reg     Reg     Reg
+  | Li        Reg     Imm
+  | La        Reg     LabelI
+  | Lwl       Reg     LabelF
+  | Lwr       Reg     Reg     Imm
+  | Lsl       FReg    LabelF
+  | Lsr       FReg    Reg     Imm
+  | Sw        Reg     Reg     Imm
+  | Ss        FReg    Reg     Imm
+  | Beq       Reg     Reg     LabelI
+  | Bne       Reg     Reg     LabelI
+  | Blt       Reg     Reg     LabelI
+  | Bgt       Reg     Reg     LabelI
+  | Beqi      Reg     Imm5    LabelI
+  | Bnei      Reg     Imm5    LabelI
+  | Blti      Reg     Imm5    LabelI
+  | Bgti      Reg     Imm5    LabelI
+  | Ceqs      FReg    FReg    LabelI
+  | Cles      FReg    FReg    LabelI
+  | Clts      FReg    FReg    LabelI
+  | J         LabelI
+  | Jr        Reg
+  | Jal       LabelI
+  | Jalr      Reg
+  | PrintC    Reg
+  | ReadI     Reg
+  | ReadF     FReg
+  | And       Reg     Reg     Reg
+  | Or        Reg     Reg     Reg
+  | Xor       Reg     Reg     Reg
+  | Andi      Reg     Reg     Imm
+  | Ori       Reg     Reg     Imm
+  | Xori      Reg     Reg     Imm
+  | Swap      Reg     Reg
+  | Swaps     FReg    FReg
+  | Select    Reg     Reg     Reg     Reg
+  | Selects   FReg    Reg     FReg    FReg
+  | Cmp       Predicate   Reg     Reg     Reg
+  | Cmpi      Predicate   Reg     Reg     Imm5
+  | Cmps      Predicate   Reg     FReg    FReg
+  | Cvtsw     FReg    Reg
+  | Cvtws     Reg     FReg
+  | MAdds     FReg    FReg    FReg    FReg
+  | Exit
+  deriving (Eq, Ord, Show)-- }}}
+
+class ToBits a where
+  toBits :: a -> Bits
+
+instance ToBits Reg where
+  toBits = regToBits
+instance ToBits FReg where
+  toBits = fregToBits
+instance ToBits Imm where
+  toBits = immToBits
+instance ToBits Imm5 where
+  toBits = imm5ToBits
+instance ToBits Predicate where
+  toBits = predToBits
 
 ------------
 -- opcode --
@@ -79,83 +120,106 @@ data Inst = Move   Reg    Reg -- {{{
 
 opcode :: Inst -> Word32
 opcode = \case -- {{{
-  Move  {} ->  1
-  Neg   {} ->  2
-  Add   {} ->  3
-  Addi  {} ->  4
-  Sub   {} ->  5
-  Subi  {} ->  6
-  Mult  {} ->  7
-  Multi {} ->  8
-  Div   {} ->  9
-  Divi  {} -> 10
-  Movs  {} -> 11
-  Negs  {} -> 12
-  Adds  {} -> 13
-  Subs  {} -> 14
-  Muls  {} -> 15
-  Divs  {} -> 16
-  Srl   {} -> 17
-  Sll   {} -> 18
-  Li    {} -> 19
-  La    {} -> 20
-  Lwl   {} -> 21
-  Lwr   {} -> 22
-  Lsl   {} -> 23
-  Lsr   {} -> 24
-  Sw    {} -> 25
-  Ss    {} -> 26
-  Beq   {} -> 27
-  Bne   {} -> 28
-  Blt   {} -> 29
-  Bgt   {} -> 30
-  Ceqs  {} -> 31
-  Cles  {} -> 32
-  Clts  {} -> 33
-  J     {} -> 34
-  Jr    {} -> 35
-  Jal   {} -> 36
-  Jalr  {} -> 37
-  PrintI{} -> 38
-  PrintF{} -> 39
-  PrintC{} -> 40
-  ReadI {} -> 41
-  ReadF {} -> 42
-  Sin   {} -> 43
-  Cos   {} -> 44
-  Atan  {} -> 45
-  Floor {} -> 46
-  Sqrt  {} -> 47
-  Ftoi  {} -> 48
-  Itof  {} -> 49
-  Exit  {} -> 50
-  PrintB{} -> 51
-  Srli  {} -> 62
-  Slli  {} -> 63
+  Sqrt   {} ->  0
+  Move   {} ->  1
+  Neg    {} ->  2
+  Add    {} ->  3
+  Addi   {} ->  4
+  Sub    {} ->  5
+  --Subi   {} ->  6
+  Mult   {} ->  7
+  Multi  {} ->  8
+  Div    {} ->  9
+  Divi   {} -> 10
+  Movs   {} -> 11
+  Negs   {} -> 12
+  Adds   {} -> 13
+  Subs   {} -> 14
+  Muls   {} -> 15
+  Divs   {} -> 16
+  Srl    {} -> 17
+  Sll    {} -> 18
+  Li     {} -> 19
+  La     {} -> 20
+  Lwl    {} -> 21
+  Lwr    {} -> 22
+  Lsl    {} -> 23
+  Lsr    {} -> 24
+  Sw     {} -> 25
+  Ss     {} -> 26
+  Beq    {} -> 27
+  Bne    {} -> 28
+  Blt    {} -> 29
+  Bgt    {} -> 30
+  Ceqs   {} -> 31
+  Cles   {} -> 32
+  Clts   {} -> 33
+  J      {} -> 34
+  Jr     {} -> 35
+  Jal    {} -> 36
+  Jalr   {} -> 37
+  --PrintI {} -> 38
+  --PrintF {} -> 39
+  Srli   {} -> 38
+  Slli   {} -> 39
+  PrintC {} -> 40
+  ReadI  {} -> 41
+  ReadF  {} -> 42
+  Beqi   {} -> 43
+  And    {} -> 44
+  Or     {} -> 45
+  Xor    {} -> 46
+  Andi   {} -> 47
+  Ori    {} -> 48
+  Xori   {} -> 49
+  Exit   {} -> 50
+  Swap   {} -> 51
+  Swaps  {} -> 52
+  Select {} -> 53
+  Selects{} -> 54
+  Cmp    {} -> 55
+  Cmpi   {} -> 56
+  Cmps   {} -> 57
+  Cvtsw  {} -> 58
+  Cvtws  {} -> 59
+  MAdds  {} -> 60
+  Bnei   {} -> 61
+  Blti   {} -> 62
+  Bgti   {} -> 63
   -- }}}
 
+-------------------------------------------------------------------------------
+-- Conversion
+-------------------------------------------------------------------------------
+
 ----------------
--- conversion --
+-- basic type --
 ----------------
 
--- # basic type # --
-
--- errorCheckしてないので注意 headで死にうる
 bitsToWord :: Bits -> Word32
-bitsToWord = fst . head . readInt 2 (`elem` "01") digitToInt
+bitsToWord = fst . head . readInt 2 (`elem` "01") digitToInt . toStr
 
 wordToBits :: Word32 -> Bits
-wordToBits = dropWhile (=='0') . wordToBits32
+wordToBits = dropWhile (==O) . wordToBits32
+
 wordToBits32 :: Word32 -> Bits
-wordToBits32 n = reverse [ if testBit n i then '1' else '0' | i <- [0..31]]
+wordToBits32 n = reverse [ if testBit n i then I else O | i <- [0..31] ]
 
 int16ToBits :: Int16 -> Bits
-int16ToBits n = reverse [ if testBit n i then '1' else '0' | i <- [0..15]]
+int16ToBits n = reverse [ if testBit n i then I else O | i <- [0..15] ]
 
--- # data type -> Bits # --
+int16To5Bits :: Int16 -> Bits
+int16To5Bits n = reverse [ if testBit n i then I else O | i <- [0..4] ]
+
+------------------
+-- data -> Bits --
+------------------
 
 immToBits :: Imm -> Bits
 immToBits (Imm n) = int16ToBits n
+
+imm5ToBits :: Imm5 -> Bits
+imm5ToBits (Imm5 n) = int16To5Bits n
 
 opcodeBits :: Inst -> Bits
 opcodeBits = paddingF 6 . wordToBits . opcode
@@ -166,8 +230,18 @@ regToBits (Reg i)   = paddingF 5 $ wordToBits i
 fregToBits :: FReg -> Bits
 fregToBits (FReg i) = paddingF 5 $ wordToBits i
 
+predToBits :: Predicate -> Bits
+predToBits = \case
+  EQ -> [O,O,O]
+  NE -> [O,O,I]
+  LE -> [O,I,O]
+  GE -> [O,I,I]
+  LT -> [I,O,O]
+  GT -> [I,O,I]
 
--- # register # --
+--------------
+-- register --
+--------------
 
 strToFReg :: String -> FReg
 strToFReg s = assert (take 2 s == "$f") $ FReg (read $ drop 2 s)
@@ -211,15 +285,17 @@ strToReg s = case M.lookup s regs of
             , ("$ra", 31)
             ] --}}}
 
-----------
--- Util --
-----------
+-------------------------------------------------------------------------------
+-- Util
+-------------------------------------------------------------------------------
+
 -- 前を0埋め
 paddingF :: Int -> Bits -> Bits
-paddingF n s | length s > n = error $ "paddingF " ++ show n ++ " " ++ s
-             | otherwise = replicate (n - length s) '0' ++ s
+paddingF n s | length s > n = error $ "paddingF " ++ show n ++ " " ++ show s
+             | otherwise = replicate (n - length s) O ++ s
+
 -- 後を0埋め
 paddingB :: Int -> Bits -> Bits
-paddingB n s | length s > n = error $ "padding " ++ show n ++ " " ++ s
-             | otherwise = s ++ replicate (n - length s) '0'
+paddingB n s | length s > n = error $ "paddingB " ++ show n ++ " " ++ show s
+             | otherwise = s ++ replicate (n - length s) O
 

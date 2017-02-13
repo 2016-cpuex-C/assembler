@@ -39,13 +39,13 @@ main = execParser (info (helper <*> parseOpt) fullDesc) >>= \opts -> do
 
 writeTxtBinLiteral :: FilePath -> ParseResult -> IO ()
 writeTxtBinLiteral = write fw iw
-  where fw h x     = hPutStrLn h $ "32'b"++wordToBits32 x++","
-        iw h (x,i) = hPutStrLn h $ "32'b"++wordToBits32 x++", // "++show i
+  where fw h x     = hPutStrLn h $ "32'b" ++ toStr (wordToBits32 x) ++ ","
+        iw h (x,i) = hPutStrLn h $ "32'b" ++ toStr (wordToBits32 x) ++ ", // "++show i
 
 writeTxtHexLiteral :: FilePath -> ParseResult -> IO ()
 writeTxtHexLiteral = write fw iw
-  where fw h x     = hPutStrLn h $ "8'0x"++wordToBits32 x++","
-        iw h (x,i) = hPutStrLn h $ "8'0x"++wordToBits32 x++", // "++show i
+  where fw h x     = hPutStrLn h $ "8'0x" ++ toStr (wordToBits32 x) ++ ","
+        iw h (x,i) = hPutStrLn h $ "8'0x" ++ toStr (wordToBits32 x) ++ ", // "++show i
 
 writeTxtHex :: FilePath -> ParseResult -> IO ()
 writeTxtHex = write fw iw
@@ -54,8 +54,8 @@ writeTxtHex = write fw iw
 
 writeTxtBin :: FilePath -> ParseResult -> IO ()
 writeTxtBin = write fw iw
-  where fw h x     = hPutStrLn h $ wordToBits32 x
-        iw h (x,_) = hPutStrLn h $ wordToBits32 x
+  where fw h x     = hPutStrLn h $ toStr $ wordToBits32 x
+        iw h (x,_) = hPutStrLn h $ toStr $ wordToBits32 x
 
 writeBin :: FilePath -> ParseResult -> IO ()
 writeBin = write fw iw
@@ -65,24 +65,25 @@ writeBin = write fw iw
 write :: (Handle -> Word32 -> IO ())
       -> (Handle -> (Word32, Inst) -> IO ())
       -> FilePath -> ParseResult -> IO ()
-write fw iw out (ParseResult floats insts dicf dici) =
+write fw iw out (ParseResult floats insts dicf dici) = do
   withFile out WriteMode $ \h -> do
     mapM_ (fw h) floats
-    fw h 0xffffffff -- 区切り文字
+    fw h 0xffffffff -- 区切り
     mapM_ (iw h) $ [(decodeInst dici dicf i, i) | i <- insts]
-
+  --print floats
+  --print dicf
 
 -------------------------------------------------------------------------------
 -- Commandline Options
 -------------------------------------------------------------------------------
 
 data CmdOpt = CmdOpt
-              { outfile :: Maybe String
-              , noTxt   :: Bool
-              , inHex   :: Bool
-              , literal :: Bool
-              , infile  :: String
-              }
+  { outfile :: Maybe String
+  , noTxt   :: Bool
+  , inHex   :: Bool
+  , literal :: Bool
+  , infile  :: String
+  }
 
 parseOpt :: Parser CmdOpt
 parseOpt = pure CmdOpt
